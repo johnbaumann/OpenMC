@@ -4,6 +4,5 @@
 #include "custom_types.h"
 
 extern byte SPDR;
-extern byte SPSR;
 
 #endif // _SPI_H

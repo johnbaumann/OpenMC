@@ -62,8 +62,6 @@ extern "C"
             data_in |= gpio_get_level(D3_MOSI) << bitPos;
         }
 
-        //SendAck();
-
         return data_in;
     }
 
@@ -74,7 +72,7 @@ extern "C"
         if (gpio_get_level(D2_SEL) == 1)
             return;
 
-        SPI_ActiveMode();
+        //SPI_ActiveMode();
         while (gpio_get_level(D2_SEL) == 0)
         {
             SPDR = Trancieve(lastByte);
@@ -119,7 +117,6 @@ extern "C"
     // bother us with interrupts on that core.
     void IRAM_ATTR myTask(void *params)
     {
-
         ets_printf("int handler setup task on core...\n", xPortGetCoreID());
 
         ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_EDGE));
@@ -140,6 +137,7 @@ extern "C"
     void IRAM_ATTR app_main(void)
     {
 
+        VirtualMC::sio::SIO_Init();
         InitPins();
 
         SetupInterrupts();

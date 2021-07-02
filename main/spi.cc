@@ -5,4 +5,3 @@
 #define _SPIF 7
 
 byte SPDR = 0xFF;
-byte SPSR = 0x00;
