@@ -3,6 +3,8 @@
 #include "flashdata.h"
 #include "sio.h"
 
+#include <esp_log.h>
+
 namespace VirtualMC
 {
   namespace sio
@@ -162,6 +164,7 @@ namespace VirtualMC
           //Confirm LSB
           DataOut = (Sector & 0xFF);
           Checksum_Out = highByte(Sector) ^ lowByte(Sector);
+          ets_printf("Sector = 0x%04X\n", Checksum_Out);
           break;
 
           // Cases 8 through 135 overloaded to default operator below
@@ -178,14 +181,26 @@ namespace VirtualMC
         default:
           if (Cmnd_Ticks >= 8 && Cmnd_Ticks <= 135) //Stay here for 128 bytes
           {
-            DataOut = FlashData[(Sector * (uint16_t)128) + Sector_Offset];
+            if (Sector >= 192)
+            {
+              DataOut = 0x00;
+            }
+            else
+            {
+              DataOut = FlashData[(Sector * (uint16_t)128) + Sector_Offset];
+            }
+
             Checksum_Out ^= DataOut;
             Sector_Offset++;
           }
           else
           {
-            DataOut = Responses::kIdleHighZ;
-            GoIdle();
+            //DataOut = Responses::kIdleHighZ;
+            //GoIdle();
+            //SendAck = false;
+
+            // Send this till the spooky extra bytes go away
+            DataOut = 0x5C;
           }
           break;
         }

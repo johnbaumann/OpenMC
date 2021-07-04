@@ -3,11 +3,13 @@
 
 #include "driver/gpio.h"
 
-#define D0_ACK GPIO_NUM_2
+#include <esp_log.h>
+
+#define D0_ACK GPIO_NUM_27
 #define D4_MISO GPIO_NUM_12
 #define D3_MOSI GPIO_NUM_13
 #define D2_SEL GPIO_NUM_14
-#define D1_CLK GPIO_NUM_15
+#define D1_CLK GPIO_NUM_26
 
 inline void SendAck()
 {
@@ -16,6 +18,9 @@ inline void SendAck()
     {
         nop();
     }
+
+    if (gpio_get_level(D2_SEL) == 1)
+        return;
 
     // Drop ACK LO
     gpio_set_level(D0_ACK, 0);

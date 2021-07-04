@@ -34,7 +34,7 @@ extern "C"
     //int clockLowWait = 0;
     //int clockHighWait = 0;
 
-    inline byte Trancieve(char data_out)
+    inline byte Trancieve(byte data_out)
     {
         byte data_in = 0x00;
 
@@ -67,13 +67,17 @@ extern "C"
 
     void IRAM_ATTR intHandler(void *args)
     {
-        char lastByte = 0xFF;
+        byte lastByte = 0xFF;
 
         if (gpio_get_level(D2_SEL) == 1)
+        {
+            VirtualMC::sio::CurrentSIOCommand = VirtualMC::sio::PS1_SIOCommands::Idle;
+            VirtualMC::sio::memory_card::GoIdle();
             return;
+        }
 
         //SPI_ActiveMode();
-        while (gpio_get_level(D2_SEL) == 0)
+        while (gpio_get_level(D2_SEL) == 0 && VirtualMC::sio::CurrentSIOCommand != VirtualMC::sio::PS1_SIOCommands::Ignore)
         {
             SPDR = Trancieve(lastByte);
             VirtualMC::sio::SIO_ProcessEvents();
@@ -107,9 +111,7 @@ extern "C"
         gpio_set_pull_mode(D3_MOSI, GPIO_PULLUP_ONLY);
 
         gpio_set_pull_mode(D0_ACK, GPIO_FLOATING);
-        gpio_set_direction(D0_ACK, GPIO_MODE_OUTPUT);
         gpio_set_pull_mode(D4_MISO, GPIO_FLOATING);
-        gpio_set_direction(D4_MISO, GPIO_MODE_OUTPUT);
     }
 
     // task runs on core 0, so the ints happen on core 0
@@ -136,10 +138,8 @@ extern "C"
     // Things.
     void IRAM_ATTR app_main(void)
     {
-
         VirtualMC::sio::SIO_Init();
         InitPins();
-
         SetupInterrupts();
 
         while (1)
