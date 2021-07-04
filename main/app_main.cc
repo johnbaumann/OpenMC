@@ -30,11 +30,12 @@ extern "C"
 
     static void InitPins();
 
+    bool abort_loop = false;
     // TODO: use them for timeouts
     //int clockLowWait = 0;
     //int clockHighWait = 0;
 
-    inline byte Trancieve(byte data_out)
+    inline byte Transceive(byte data_out)
     {
         byte data_in = 0x00;
 
@@ -45,7 +46,10 @@ extern "C"
             while (gpio_get_level(D1_CLK) > 0)
             {
                 if (gpio_get_level(D2_SEL) == 1)
+                {
+                    abort_loop = true;
                     return 0xFF;
+                }
             }
 
             // Write bit out while clock is low
@@ -55,7 +59,10 @@ extern "C"
             while (gpio_get_level(D1_CLK) < 1)
             {
                 if (gpio_get_level(D2_SEL) == 1)
+                {
+                    abort_loop = true;
                     return 0xFF;
+                }
             }
 
             // Store current bit state
@@ -76,12 +83,22 @@ extern "C"
             return;
         }
 
+        abort_loop = false;
+
         //SPI_ActiveMode();
         while (gpio_get_level(D2_SEL) == 0 && VirtualMC::sio::CurrentSIOCommand != VirtualMC::sio::PS1_SIOCommands::Ignore)
         {
-            SPDR = Trancieve(lastByte);
-            VirtualMC::sio::SIO_ProcessEvents();
-            lastByte = SPDR;
+            SPDR = Transceive(lastByte);
+            if(abort_loop)
+            {
+                gpio_set_level(D4_MISO, 1);
+                break;
+            }
+            else
+            {
+                VirtualMC::sio::SIO_ProcessEvents();
+                lastByte = SPDR;
+            }
         }
 
         if (VirtualMC::sio::CurrentSIOCommand != VirtualMC::sio::PS1_SIOCommands::Idle)
@@ -144,8 +161,9 @@ extern "C"
 
         while (1)
         {
+            nop();
             // make the watchdog happy. the fussy prick
-            vTaskDelay(1);
+            //vTaskDelay(1);
         }
     }
 }

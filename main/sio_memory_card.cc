@@ -2,8 +2,10 @@
 
 #include "flashdata.h"
 #include "sio.h"
+#include "spi.h"
 
 #include <esp_log.h>
+#include <esp_attr.h>
 
 namespace VirtualMC
 {
@@ -20,7 +22,7 @@ namespace VirtualMC
       uint8_t Sector_Offset;
       byte Checksum_In;
       byte Checksum_Out;
-      bool SendAck = true;
+      //bool SendAck = true;
       bool UncommitedWrite = false;
 
       uint8_t DataBuffer[128]; //128 on 328P
@@ -47,11 +49,11 @@ namespace VirtualMC
       {
         Cur_Cmnd = Commands::kNone;
         Cmnd_Ticks = 0;
-        SendAck = true;
+        //SendAck = true;
         Sector_Offset = 0;
       }
 
-      byte ProcessEvents(byte DataIn)
+      byte IRAM_ATTR ProcessEvents(byte DataIn)
       {
         byte DataOut;
         bool cmdRouted = false;
@@ -111,11 +113,11 @@ namespace VirtualMC
         return DataOut;
       }
 
-      byte TickReadCommand(byte &DataIn)
+      byte IRAM_ATTR TickReadCommand(byte &DataIn)
       {
         byte DataOut;
 
-        SendAck = true; // Default true;
+        //SendAck = true; // Default true;
 
         switch (Cmnd_Ticks)
         {
@@ -164,7 +166,7 @@ namespace VirtualMC
           //Confirm LSB
           DataOut = (Sector & 0xFF);
           Checksum_Out = highByte(Sector) ^ lowByte(Sector);
-          ets_printf("Sector = 0x%04X\n", Checksum_Out);
+          //ets_printf("Sector = 0x%04X\n", Sector);
           break;
 
           // Cases 8 through 135 overloaded to default operator below
@@ -175,13 +177,18 @@ namespace VirtualMC
 
         case 137:
           DataOut = Responses::kGoodReadWrite;
-          SendAck = false;
+          //SendAck = false;
           break;
+
+        /*case 138:
+          DataOut = 0x5C;
+          SendAck = false;
+          break;*/
 
         default:
           if (Cmnd_Ticks >= 8 && Cmnd_Ticks <= 135) //Stay here for 128 bytes
           {
-            if (Sector >= 192)
+            if (Sector >= 1024)
             {
               DataOut = 0x00;
             }
@@ -201,6 +208,8 @@ namespace VirtualMC
 
             // Send this till the spooky extra bytes go away
             DataOut = 0x5C;
+            //ets_printf("Weird tick = %x\n", Cmnd_Ticks);
+            //ets_printf("SPDR = 0x%02X\n", SPDR);
           }
           break;
         }
@@ -214,7 +223,7 @@ namespace VirtualMC
       {
         byte DataOut = 0x00;
 
-        SendAck = true; // Default true;
+        //SendAck = true; // Default true;
 
         switch (Cmnd_Ticks)
         {
@@ -273,7 +282,7 @@ namespace VirtualMC
           }
           else if (Cmnd_Ticks == 135) // 00h
           {
-            if (Sector > 1024)
+            if (Sector >= 1024)
             {
               DataOut = Responses::kBadSector;
             }
@@ -282,7 +291,7 @@ namespace VirtualMC
               FLAG = Flags::kDirectoryRead;
               DataOut = Responses::kGoodReadWrite;
               // If the incoming sector is within our storage, store it
-              if (Sector + 1 <= 192)
+              if (Sector < 1024)
               {
                 UncommitedWrite = true;
               }

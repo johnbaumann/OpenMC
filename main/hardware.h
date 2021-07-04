@@ -14,13 +14,21 @@
 inline void SendAck()
 {
     // Delay ~10uS from last clock pulse
-    for (int i = 0; i < 150; i++)
+    
+    //for (int i = 0; i < 150; i++)
+    // 30 = 10
+
+    for (int i = 0; i < 25; i++)
     {
-        nop();
+        //nop();
+        if(gpio_get_level(D2_SEL) == 1)
+        {
+            return;
+        }
     }
 
-    if (gpio_get_level(D2_SEL) == 1)
-        return;
+    //if (gpio_get_level(D2_SEL) == 1)
+        //return;
 
     // Drop ACK LO
     gpio_set_level(D0_ACK, 0);
@@ -46,6 +54,10 @@ inline void SPI_ActiveMode()
 
 inline void SPI_PassiveMode()
 {
+
+    //gpio_set_level(D4_MISO, 1);
+    //gpio_set_level(D0_ACK, 1);
+
     gpio_set_pull_mode(D4_MISO, GPIO_FLOATING);
     gpio_set_direction(D4_MISO, GPIO_MODE_INPUT);
     gpio_set_pull_mode(D0_ACK, GPIO_FLOATING);

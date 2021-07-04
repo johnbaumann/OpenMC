@@ -45,7 +45,7 @@ namespace VirtualMC
             extern byte FLAG;
 
             extern uint16_t Sector;
-            extern bool SendAck;
+            //extern bool SendAck;
 
             void Commit();
             void GoIdle();
