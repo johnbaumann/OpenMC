@@ -42,6 +42,7 @@ namespace VirtualMC
                 kBadSector = 0xFF            // Bad Memory Card Sector
             };
 
+            extern uint8_t MemCardRAM[131072];
             extern byte FLAG;
 
             extern uint16_t Sector;

@@ -14,6 +14,8 @@ namespace VirtualMC
     namespace memory_card
     {
 
+      uint8_t MemCardRAM[131072] = {};
+
       byte FLAG = Flags::kDirectoryUnread;
 
       byte Cur_Cmnd;
@@ -33,6 +35,10 @@ namespace VirtualMC
         {
           // Write buffer to memory page
           //optiboot_writePage(FlashData, DataBuffer, Sector + 1);
+          for(int i=0; i < 128; i++)
+          {
+            MemCardRAM[(Sector * 128) + i] = DataBuffer[i];
+          }
 
           // Directory structure was updated, reset directory status
           if (Sector == 0x0000)
@@ -194,7 +200,8 @@ namespace VirtualMC
             }
             else
             {
-              DataOut = FlashData[(Sector * (uint16_t)128) + Sector_Offset];
+              //DataOut = FlashData[(Sector * (uint16_t)128) + Sector_Offset];
+              DataOut = MemCardRAM[(Sector * (uint16_t)128) + Sector_Offset];
             }
 
             Checksum_Out ^= DataOut;

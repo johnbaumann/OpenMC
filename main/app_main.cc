@@ -112,6 +112,15 @@ extern "C"
         }
     }
 
+    static void CopyCardToRAM()
+    {
+        for(int i=0; i < 131072; i++)
+        {
+            VirtualMC::sio::memory_card::MemCardRAM[i] = FlashData[i];
+        }
+        ets_printf("Memory card image loaded to RAM\n");
+    }
+
     static void InitPins()
     {
 
@@ -137,6 +146,7 @@ extern "C"
     void IRAM_ATTR myTask(void *params)
     {
         ets_printf("int handler setup task on core...\n", xPortGetCoreID());
+        printf("Free Heap = %i\n", esp_get_free_heap_size());
 
         ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_EDGE));
         ESP_ERROR_CHECK(gpio_set_intr_type(D2_SEL, GPIO_INTR_NEGEDGE));
@@ -156,6 +166,7 @@ extern "C"
     void IRAM_ATTR app_main(void)
     {
         VirtualMC::sio::SIO_Init();
+        CopyCardToRAM();
         InitPins();
         SetupInterrupts();
 
