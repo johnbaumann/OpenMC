@@ -9,7 +9,7 @@ namespace VirtualMC
 {
     namespace sio
     {
-        byte CurrentSIOCommand = PS1_SIOCommands::Idle;
+        uint8_t CurrentSIOCommand = PS1_SIOCommands::Idle;
 
         bool bMemCardEnabled = true;
 
@@ -21,8 +21,8 @@ namespace VirtualMC
 
         void IRAM_ATTR SIO_ProcessEvents()
         {
-            byte DataIn = 0x00;
-            byte DataOut = 0xFF;
+            uint8_t DataIn = 0x00;
+            uint8_t DataOut = 0xFF;
             //bool bTempAck = false;
 
             // If ignore, do nothing
@@ -61,12 +61,13 @@ namespace VirtualMC
                         // Byte exchange is offset by one
                         // This offsets the ACK signal accordingly
                         DataOut = memory_card::ProcessEvents(DataIn);
-                        SendAck();
+
                     }
                     else
                     {
                         CurrentSIOCommand = PS1_SIOCommands::Ignore;
                         SPI_Disable();
+                        return;
                         //bTempAck = false;
                     }
 
@@ -81,10 +82,7 @@ namespace VirtualMC
                 // Push outbound data to the SPI Data Register
                 // Data will be transferred in the next byte pair
                 SPDR = DataOut;
-
-                // Only send ACK if slave still selected
-                /*if (bTempAck)
-                    SendAck();*/
+                SendAck();
 
                 // If data is ready for card, store it.
                 // This takes a bit so this is done after SPDR + ACK

@@ -1,3 +1,8 @@
+#include "flashdata.h"
+#include "hardware.h"
+#include "spi.h"
+#include "sio.h"
+#include "sio_memory_card.h"
 
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
@@ -8,14 +13,6 @@
 #include "driver/uart.h"
 #include "esp_intr_alloc.h"
 
-#include "custom_types.h"
-#include "flashdata.h"
-#include "hardware.h"
-#include "spi.h"
-
-#include "sio.h"
-#include "sio_memory_card.h"
-
 // Refs
 // https://github.com/nkolban/esp32-snippets/blob/master/gpio/interrupts/test_intr.c
 // https://esp32.com/viewtopic.php?t=13432
@@ -23,84 +20,36 @@
 // not using pins >= 34 as pull ups
 // https://www.esp32.com/viewtopic.php?t=1183
 // rama
+// sickle <3
 //
 
 extern "C"
 {
+    void app_main(void);
+}
 
-    static void InitPins();
-
-    bool abort_loop = false;
-    // TODO: use them for timeouts
+void IRAM_ATTR InterruptHandler_SPI(void *args)
+{
+    // To-do: Use these for SPI timeouts
     //int clockLowWait = 0;
     //int clockHighWait = 0;
+    uint8_t lastByte = 0xFF;
 
-    inline byte Transceive(byte data_out)
+    spi_selected = true;
+
+    /*// Only watching falling edge, below code possibly redundant
+    if (gpio_get_level(kSEL_Pin) == 1)
     {
-        byte data_in = 0x00;
-
-        for (int bitPos = 0; bitPos < 8; bitPos++)
-        {
-
-            // Wait for clock to go low
-            while (gpio_get_level(D1_CLK) > 0)
-            {
-                if (gpio_get_level(D2_SEL) == 1)
-                {
-                    abort_loop = true;
-                    return 0xFF;
-                }
-            }
-
-            // Write bit out while clock is low
-            gpio_set_level(D4_MISO, data_out & (1 << bitPos));
-
-            // Wait for clock to go high
-            while (gpio_get_level(D1_CLK) < 1)
-            {
-                if (gpio_get_level(D2_SEL) == 1)
-                {
-                    abort_loop = true;
-                    return 0xFF;
-                }
-            }
-
-            // Store current bit state
-            data_in |= gpio_get_level(D3_MOSI) << bitPos;
-        }
-
-        return data_in;
+        spi_selected = false;
+    }
+    else
+    {
+        spi_selected = true;
     }
 
-    void IRAM_ATTR intHandler(void *args)
+    if (!spi_selected)
     {
-        byte lastByte = 0xFF;
-
-        if (gpio_get_level(D2_SEL) == 1)
-        {
-            VirtualMC::sio::CurrentSIOCommand = VirtualMC::sio::PS1_SIOCommands::Idle;
-            VirtualMC::sio::memory_card::GoIdle();
-            return;
-        }
-
-        abort_loop = false;
-
-        //SPI_ActiveMode();
-        while (gpio_get_level(D2_SEL) == 0 && VirtualMC::sio::CurrentSIOCommand != VirtualMC::sio::PS1_SIOCommands::Ignore)
-        {
-            SPDR = Transceive(lastByte);
-            if(abort_loop)
-            {
-                gpio_set_level(D4_MISO, 1);
-                break;
-            }
-            else
-            {
-                VirtualMC::sio::SIO_ProcessEvents();
-                lastByte = SPDR;
-            }
-        }
-
+        // Status not idle, reset SIO/SPI state
         if (VirtualMC::sio::CurrentSIOCommand != VirtualMC::sio::PS1_SIOCommands::Idle)
         {
             // Clear last command
@@ -108,73 +57,80 @@ extern "C"
 
             // Reset Memory Card commands/variables
             VirtualMC::sio::memory_card::GoIdle();
+
+            // Quietly listen on SPI
             SPI_PassiveMode();
-        }
-    }
-
-    static void CopyCardToRAM()
-    {
-        for(int i=0; i < 131072; i++)
-        {
-            VirtualMC::sio::memory_card::MemCardRAM[i] = FlashData[i];
-        }
-        ets_printf("Memory card image loaded to RAM\n");
-    }
-
-    static void InitPins()
-    {
-
-        int allpins[] = {D0_ACK, D1_CLK, D2_SEL, D3_MOSI, D4_MISO};
-
-        for (int i = 0; i < 5; i++)
-        {
-            gpio_reset_pin((gpio_num_t)allpins[i]);
-            gpio_set_direction((gpio_num_t)allpins[i], GPIO_MODE_INPUT);
+            SPI_Enable();
         }
 
-        gpio_set_pull_mode(D1_CLK, GPIO_PULLUP_ONLY);
-        gpio_set_pull_mode(D2_SEL, GPIO_PULLUP_ONLY);
-        gpio_set_pull_mode(D3_MOSI, GPIO_PULLUP_ONLY);
-
-        gpio_set_pull_mode(D0_ACK, GPIO_FLOATING);
-        gpio_set_pull_mode(D4_MISO, GPIO_FLOATING);
+        return;
     }
+    //else
+    //{
 
-    // task runs on core 0, so the ints happen on core 0
-    // so as long as we're in intHandler() the system won't
-    // bother us with interrupts on that core.
-    void IRAM_ATTR myTask(void *params)
+    }*/
+
+    // Do SPI loop
+    while (spi_selected)
     {
-        ets_printf("int handler setup task on core...\n", xPortGetCoreID());
-        printf("Free Heap = %i\n", esp_get_free_heap_size());
-
-        ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_EDGE));
-        ESP_ERROR_CHECK(gpio_set_intr_type(D2_SEL, GPIO_INTR_NEGEDGE));
-        ESP_ERROR_CHECK(gpio_isr_handler_add(D2_SEL, intHandler, NULL));
-
-        vTaskDelete(NULL); // NULL means "this task"
+        SPDR = SPI_Transceive(lastByte);
+        VirtualMC::sio::SIO_ProcessEvents();
+        lastByte = SPDR;
     }
 
-    // Do the thing on core 0
-    void IRAM_ATTR SetupInterrupts()
+    // Status not idle, reset SIO/SPI state
+    if (VirtualMC::sio::CurrentSIOCommand != VirtualMC::sio::PS1_SIOCommands::Idle)
     {
+        // Clear last command
+        VirtualMC::sio::CurrentSIOCommand = VirtualMC::sio::PS1_SIOCommands::Idle;
 
-        xTaskCreatePinnedToCore(myTask, "spi_task_core_0", 1024 * 10, NULL, 1, NULL, 0);
+        // Reset Memory Card commands/variables
+        VirtualMC::sio::memory_card::GoIdle();
+
+        // Quietly listen on SPI
+        SPI_PassiveMode();
+        SPI_Enable();
     }
+}
 
-    // Things.
-    void IRAM_ATTR app_main(void)
+static void CopyCardToRAM()
+{
+    for (int i = 0; i < 131072; i++)
     {
-        VirtualMC::sio::SIO_Init();
-        CopyCardToRAM();
-        InitPins();
-        SetupInterrupts();
-
-        while (1)
-        {
-            nop();
-            // make the watchdog happy. the fussy prick
-            //vTaskDelay(1);
-        }
+        VirtualMC::sio::memory_card::MemCardRAM[i] = FlashData[i];
     }
+    ets_printf("Memory card image loaded to RAM\n");
+}
+
+// task runs on core 1, so the ints happen on core 1
+// so as long as we're in InterruptHandler_SPI() the system won't
+// bother us with interrupts on that core.
+// sickle the man!
+void Task_InstallSPIInterrupt(void *params)
+{
+    printf("int handler setup task on core %i\n", xPortGetCoreID());
+    printf("Free Heap = %i\n", esp_get_free_heap_size());
+
+    ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_EDGE));
+    ESP_ERROR_CHECK(gpio_set_intr_type(kSEL_Pin, GPIO_INTR_NEGEDGE));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(kSEL_Pin, InterruptHandler_SPI, NULL));
+
+    vTaskDelete(NULL); // NULL means "this task"
+}
+
+void SetupInterrupts()
+{
+    // Create a task to install our interrupt handler on Core 1
+    xTaskCreatePinnedToCore(Task_InstallSPIInterrupt, "spi_task_core_1", 1024 * 10, NULL, 1, NULL, 1);
+}
+
+// Things.
+void app_main(void)
+{
+    VirtualMC::sio::SIO_Init(); // Init the SIO state machine to a default state.
+    CopyCardToRAM();            // Hacky memcpy from flash storage to ram To-Do: Load from persistant storage
+    SPI_InitPins();             // Setup the pins for SPI
+    SPI_Enable();
+    SetupInterrupts(); // Create a task to install our interrupt handler on Core 1
+    // ESP32 likes Core 0 for WiFi
 }

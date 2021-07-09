@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := spi-slave-receiver
+PROJECT_NAME := esp-sio-device
 
 include $(IDF_PATH)/make/project.mk
 

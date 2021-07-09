@@ -1,13 +1,13 @@
 #ifndef SIO_H
 #define SIO_H
 
-#include "custom_types.h"
+#include <stdint.h>
 
 namespace VirtualMC
 {
     namespace sio
     {
-        enum PS1_SIOCommands : byte
+        enum PS1_SIOCommands : uint8_t
         {
             Idle = 0x00,
             PAD_Access = 0x01,
@@ -18,13 +18,13 @@ namespace VirtualMC
             Ignore = 0xFF // To ignore or wait for incoming commands
         };
 
-        extern byte CurrentSIOCommand;
+        extern uint8_t CurrentSIOCommand;
 
         extern bool bMemCardEnabled;
 
         void SIO_Init();
         void SIO_ProcessEvents();
-        byte SIO_ProcessPadEvents(byte);
+        uint8_t SIO_ProcessPadEvents(uint8_t);
     } // namespace sio
 } // namespace VirtualMC
 

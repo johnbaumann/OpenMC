@@ -7,6 +7,9 @@
 #include <esp_log.h>
 #include <esp_attr.h>
 
+#define lowByte(w) ((uint8_t) ((w) & 0xff))
+#define highByte(w) ((uint8_t) ((w) >> 8))
+
 namespace VirtualMC
 {
   namespace sio
@@ -16,14 +19,14 @@ namespace VirtualMC
 
       uint8_t MemCardRAM[131072] = {};
 
-      byte FLAG = Flags::kDirectoryUnread;
+      uint8_t FLAG = Flags::kDirectoryUnread;
 
-      byte Cur_Cmnd;
+      uint8_t Cur_Cmnd;
       uint8_t Cmnd_Ticks;
       uint16_t Sector;
       uint8_t Sector_Offset;
-      byte Checksum_In;
-      byte Checksum_Out;
+      uint8_t Checksum_In;
+      uint8_t Checksum_Out;
       //bool SendAck = true;
       bool UncommitedWrite = false;
 
@@ -59,9 +62,9 @@ namespace VirtualMC
         Sector_Offset = 0;
       }
 
-      byte IRAM_ATTR ProcessEvents(byte DataIn)
+      uint8_t IRAM_ATTR ProcessEvents(uint8_t DataIn)
       {
-        byte DataOut;
+        uint8_t DataOut;
         bool cmdRouted = false;
 
         //Loop until command is properly routed
@@ -119,9 +122,9 @@ namespace VirtualMC
         return DataOut;
       }
 
-      byte IRAM_ATTR TickReadCommand(byte &DataIn)
+      uint8_t IRAM_ATTR TickReadCommand(uint8_t &DataIn)
       {
-        byte DataOut;
+        uint8_t DataOut;
 
         //SendAck = true; // Default true;
 
@@ -226,9 +229,9 @@ namespace VirtualMC
         return DataOut;
       }
 
-      byte TickWriteCommand(byte &DataIn)
+      uint8_t TickWriteCommand(uint8_t &DataIn)
       {
-        byte DataOut = 0x00;
+        uint8_t DataOut = 0x00;
 
         //SendAck = true; // Default true;
 

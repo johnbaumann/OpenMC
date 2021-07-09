@@ -1,7 +1,7 @@
 #ifndef SIO_MEMORY_CARD_H
 #define SIO_MEMORY_CARD_H
 
-#include "custom_types.h"
+#include <stdint.h>
 
 namespace VirtualMC
 {
@@ -12,14 +12,14 @@ namespace VirtualMC
 
             // Implement actual bit manipulation later
             // Need more info on FLAG bits.
-            enum Flags : byte
+            enum Flags : uint8_t
             {
                 kDirectoryUnread = 0x08, // Initial power on value
                 kDirectoryRead = 0x00    // Cleared after good MC Write
                                          // (test write sector 3F = 0x1F80) offset
             };
 
-            enum Commands : byte
+            enum Commands : uint8_t
             {
                 kAccess = 0x81, // Memory Card Select
                 kRead = 0x52,   // Read Command
@@ -29,7 +29,7 @@ namespace VirtualMC
                 kError = 0xFF   // Bad command
             };
 
-            enum Responses : byte
+            enum Responses : uint8_t
             {
                 kIdleHighZ = 0xFF,           // High default state
                 kDummy = 0x00,               // Filler Data
@@ -43,16 +43,16 @@ namespace VirtualMC
             };
 
             extern uint8_t MemCardRAM[131072];
-            extern byte FLAG;
+            extern uint8_t FLAG;
 
             extern uint16_t Sector;
             //extern bool SendAck;
 
             void Commit();
             void GoIdle();
-            byte ProcessEvents(byte);
-            byte TickReadCommand(byte &);
-            byte TickWriteCommand(byte &);
+            uint8_t ProcessEvents(uint8_t);
+            uint8_t TickReadCommand(uint8_t &);
+            uint8_t TickWriteCommand(uint8_t &);
         } // namespace memory_card
     } //namespace sio
 } // namespace VirtualMC
