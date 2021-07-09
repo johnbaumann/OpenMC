@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-namespace VirtualMC
+namespace esp_sio_dev
 {
     namespace sio
     {
@@ -55,6 +55,6 @@ namespace VirtualMC
             uint8_t TickWriteCommand(uint8_t &);
         } // namespace memory_card
     } //namespace sio
-} // namespace VirtualMC
+} // namespace esp_sio_dev
 
 #endif //SIO_MEMORY_CARD_H

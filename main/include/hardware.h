@@ -1,7 +1,7 @@
 #ifndef _HARDWARE_H
 #define _HARDWARE_H
 
-#include "driver/gpio.h"
+#include <driver/gpio.h>
 
 #include <esp_log.h>
 

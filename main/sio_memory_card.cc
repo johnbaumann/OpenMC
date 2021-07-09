@@ -7,10 +7,7 @@
 #include <esp_log.h>
 #include <esp_attr.h>
 
-#define lowByte(w) ((uint8_t) ((w) & 0xff))
-#define highByte(w) ((uint8_t) ((w) >> 8))
-
-namespace VirtualMC
+namespace esp_sio_dev
 {
   namespace sio
   {
@@ -327,4 +324,4 @@ namespace VirtualMC
       }
     } // namespace memory_card
   }   // namespace sio
-} // namespace VirtualMC
+} // namespace esp_sio_dev

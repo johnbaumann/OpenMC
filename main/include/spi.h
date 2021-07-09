@@ -6,6 +6,9 @@
 #include <stdint.h>
 #include "driver/gpio.h"
 
+#define lowByte(w) ((uint8_t) ((w) & 0xff))
+#define highByte(w) ((uint8_t) ((w) >> 8))
+
 extern uint8_t SPDR;
 extern bool spi_selected;
 extern bool spi_enabled;

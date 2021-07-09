@@ -5,13 +5,13 @@
 #include "sio_memory_card.h"
 
 #include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "driver/gpio.h"
-#include "esp_log.h"
-#include "sdkconfig.h"
-#include "driver/uart.h"
-#include "esp_intr_alloc.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <driver/gpio.h>
+#include <esp_log.h>
+#include <sdkconfig.h>
+#include <driver/uart.h>
+#include <esp_intr_alloc.h>
 
 // Refs
 // https://github.com/nkolban/esp32-snippets/blob/master/gpio/interrupts/test_intr.c
@@ -35,57 +35,25 @@ void IRAM_ATTR InterruptHandler_SPI(void *args)
     //int clockHighWait = 0;
     uint8_t lastByte = 0xFF;
 
+    // Interrupt triggered on falling edge, assume we're going in hot
     spi_selected = true;
-
-    /*// Only watching falling edge, below code possibly redundant
-    if (gpio_get_level(kSEL_Pin) == 1)
-    {
-        spi_selected = false;
-    }
-    else
-    {
-        spi_selected = true;
-    }
-
-    if (!spi_selected)
-    {
-        // Status not idle, reset SIO/SPI state
-        if (VirtualMC::sio::CurrentSIOCommand != VirtualMC::sio::PS1_SIOCommands::Idle)
-        {
-            // Clear last command
-            VirtualMC::sio::CurrentSIOCommand = VirtualMC::sio::PS1_SIOCommands::Idle;
-
-            // Reset Memory Card commands/variables
-            VirtualMC::sio::memory_card::GoIdle();
-
-            // Quietly listen on SPI
-            SPI_PassiveMode();
-            SPI_Enable();
-        }
-
-        return;
-    }
-    //else
-    //{
-
-    }*/
 
     // Do SPI loop
     while (spi_selected)
     {
         SPDR = SPI_Transceive(lastByte);
-        VirtualMC::sio::SIO_ProcessEvents();
+        esp_sio_dev::sio::SIO_ProcessEvents();
         lastByte = SPDR;
     }
 
     // Status not idle, reset SIO/SPI state
-    if (VirtualMC::sio::CurrentSIOCommand != VirtualMC::sio::PS1_SIOCommands::Idle)
+    if (esp_sio_dev::sio::CurrentSIOCommand != esp_sio_dev::sio::PS1_SIOCommands::Idle)
     {
         // Clear last command
-        VirtualMC::sio::CurrentSIOCommand = VirtualMC::sio::PS1_SIOCommands::Idle;
+        esp_sio_dev::sio::CurrentSIOCommand = esp_sio_dev::sio::PS1_SIOCommands::Idle;
 
-        // Reset Memory Card commands/variables
-        VirtualMC::sio::memory_card::GoIdle();
+        // Reset emulated device commands/variables
+        esp_sio_dev::sio::SIO_GoIdle();
 
         // Quietly listen on SPI
         SPI_PassiveMode();
@@ -97,7 +65,7 @@ static void CopyCardToRAM()
 {
     for (int i = 0; i < 131072; i++)
     {
-        VirtualMC::sio::memory_card::MemCardRAM[i] = FlashData[i];
+        esp_sio_dev::sio::memory_card::MemCardRAM[i] = FlashData[i];
     }
     ets_printf("Memory card image loaded to RAM\n");
 }
@@ -127,7 +95,7 @@ void SetupInterrupts()
 // Things.
 void app_main(void)
 {
-    VirtualMC::sio::SIO_Init(); // Init the SIO state machine to a default state.
+    esp_sio_dev::sio::SIO_Init(); // Init the SIO state machine to a default state.
     CopyCardToRAM();            // Hacky memcpy from flash storage to ram To-Do: Load from persistant storage
     SPI_InitPins();             // Setup the pins for SPI
     SPI_Enable();

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-namespace VirtualMC
+namespace esp_sio_dev
 {
     namespace sio
     {
@@ -21,11 +21,14 @@ namespace VirtualMC
         extern uint8_t CurrentSIOCommand;
 
         extern bool bMemCardEnabled;
+        extern bool bPadEnabled;
+        extern bool bNYEnabled;
 
+        void SIO_GoIdle();
         void SIO_Init();
         void SIO_ProcessEvents();
         uint8_t SIO_ProcessPadEvents(uint8_t);
     } // namespace sio
-} // namespace VirtualMC
+} // namespace esp_sio_dev
 
 #endif // SIO_H
