@@ -26,7 +26,19 @@ namespace esp_sio_dev
                 kGetID = 0x53,  // Get ID Command
                 kWrite = 0x57,  // Write Command
                 kNone = 0x00,   // No command, idle state
-                kError = 0xFF   // Bad command
+                kError = 0xFF,  // Bad command
+
+                // https://gitlab.com/chriz2600/ps1-game-id-transmission
+                // PS1 Game ID transmisson (MemCard PRO / PS1Digital)
+                // To-do: Some commands may require ACK skip behavior?
+                // To-do: Consider disabling some commands/implementations as non-applicable
+                kPing = 0x20,            // Ping Command
+                kGameID = 0x21,          // GAMEID
+                kPreviousChannel = 0x22, // mount the previous channel of the Virtual Memory Card
+                kNextChannel = 0x23,     // mount the next channel of the Virtual Memory Card
+                kPreviousCard = 0x24,    // mount the previous folder (card)
+                kNextCard = 0x25,        // mount the next folder (card)
+                kGetCardName = 0x26      // pass the name of the currently mounted card
             };
 
             enum Responses : uint8_t
@@ -39,22 +51,38 @@ namespace esp_sio_dev
                 kCommandAcknowledge2 = 0x5D, // Command Acknowledge 2
                 kGoodReadWrite = 0x47,       // Good Read/Write
                 kBadChecksum = 0x4E,         // Bad Checksum during Write
-                kBadSector = 0xFF            // Bad Memory Card Sector
+                kBadSector = 0xFF,           // Bad Memory Card Sector
+                                             // https://gitlab.com/chriz2600/ps1-game-id-transmission
+                                             // PS1 Game ID transmisson (MemCard PRO / PS1Digital)
+                kSuccess = 0x20,             // Success
+                kCardPresent = 0x27,         // Card Present
+                kReserved = 0x00,            // Reserved
+                kTerminationSignal = 0xFF    // Termination Signal
+
             };
 
             extern uint8_t MemCardRAM[131072];
             extern uint8_t FLAG;
 
             extern uint16_t Sector;
-            //extern bool SendAck;
+            
+            extern uint8_t GameID[256];
+            extern uint8_t GameID_Length;
 
             void Commit();
             void GoIdle();
             uint8_t ProcessEvents(uint8_t);
-            uint8_t TickReadCommand(uint8_t &);
-            uint8_t TickWriteCommand(uint8_t &);
+            uint8_t TickReadCommand(uint8_t &DataIn);
+            uint8_t TickWriteCommand(uint8_t &DataIn);
+
+            // https://gitlab.com/chriz2600/ps1-game-id-transmission
+            // PS1 Game ID transmisson (MemCard PRO / PS1Digital)
+            uint8_t TickGameIDCommand(uint8_t &DataIn);
+            uint8_t TickPingCommand(uint8_t &DataIn);
         } // namespace memory_card
+
     } //namespace sio
+
 } // namespace esp_sio_dev
 
 #endif //SIO_MEMORY_CARD_H

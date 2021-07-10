@@ -21,7 +21,8 @@
 // https://www.esp32.com/viewtopic.php?t=1183
 // rama
 // sickle <3
-//
+// Nicolas Noble
+// danhans42
 
 extern "C"
 {
@@ -58,6 +59,11 @@ void IRAM_ATTR InterruptHandler_SPI(void *args)
         // Quietly listen on SPI
         SPI_PassiveMode();
         SPI_Enable();
+
+        /*if(esp_sio_dev::sio::memory_card::GameID_Length > 0)
+        {
+            // Received game id, do a thing
+        }*/
     }
 }
 
@@ -67,7 +73,7 @@ static void CopyCardToRAM()
     {
         esp_sio_dev::sio::memory_card::MemCardRAM[i] = FlashData[i];
     }
-    ets_printf("Memory card image loaded to RAM\n");
+    //ets_printf("Memory card image loaded to RAM\n");
 }
 
 // task runs on core 1, so the ints happen on core 1
@@ -76,8 +82,8 @@ static void CopyCardToRAM()
 // sickle the man!
 void Task_InstallSPIInterrupt(void *params)
 {
-    printf("int handler setup task on core %i\n", xPortGetCoreID());
-    printf("Free Heap = %i\n", esp_get_free_heap_size());
+    //printf("int handler setup task on core %i\n", xPortGetCoreID());
+    //printf("Free Heap = %i\n", esp_get_free_heap_size());
 
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_EDGE));
     ESP_ERROR_CHECK(gpio_set_intr_type(kSEL_Pin, GPIO_INTR_NEGEDGE));
