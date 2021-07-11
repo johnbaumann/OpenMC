@@ -1,3 +1,4 @@
+#include "app_sdcard.h"
 #include "flashdata.h"
 #include "hardware.h"
 #include "spi.h"
@@ -13,6 +14,7 @@
 #include <driver/uart.h>
 #include <esp_intr_alloc.h>
 
+
 // Refs
 // https://github.com/nkolban/esp32-snippets/blob/master/gpio/interrupts/test_intr.c
 // https://esp32.com/viewtopic.php?t=13432
@@ -27,6 +29,65 @@
 extern "C"
 {
     void app_main(void);
+    void app_sdcard(void);
+}
+
+void LoadCardFromFile(char *filepath);
+
+void Task_SDCardTest(void *params)
+{
+    int64_t load_start_time;
+    int64_t load_end_time;
+    
+    load_start_time = esp_timer_get_time();
+    app_sdcard();
+    load_end_time = esp_timer_get_time();
+    printf("Mounted card in %llu microseconds\n", load_end_time - load_start_time);
+
+    load_start_time = esp_timer_get_time();
+    LoadCardFromFile("/sdcard/fullcard.mc");
+    load_end_time = esp_timer_get_time();
+    printf("Loaded file in %llu microseconds\n", load_end_time - load_start_time);
+
+    vTaskDelete(NULL); // NULL means "this task"
+}
+
+void LoadCardFromFile(char *filepath)
+{
+    FILE *fd = fopen(filepath, "r");
+
+    long file_size;
+
+    if (!fd)
+    {
+        printf("Error opening file!\n");
+        return;
+    }
+    else
+    {
+        fseek(fd, 0, SEEK_END);
+        file_size = ftell(fd);
+        if (file_size > 131072)
+        {
+            printf("File size too large\n");
+            fclose(fd);
+            return;
+        }
+        else if (file_size <= 0)
+        {
+            printf("File is empty\n");
+            fclose(fd);
+            return;
+        }
+        rewind(fd);
+
+        for(int i=0; i < file_size; i++)
+        {
+            esp_sio_dev::sio::memory_card::MemCardRAM[i] = fgetc(fd);
+        }
+
+        fclose(fd);
+    }
 }
 
 void IRAM_ATTR InterruptHandler_SPI(void *args)
@@ -82,8 +143,8 @@ static void CopyCardToRAM()
 // sickle the man!
 void Task_InstallSPIInterrupt(void *params)
 {
-    //printf("int handler setup task on core %i\n", xPortGetCoreID());
-    //printf("Free Heap = %i\n", esp_get_free_heap_size());
+    printf("int handler setup task on core %i\n", xPortGetCoreID());
+    printf("Free Heap = %i\n", esp_get_free_heap_size());
 
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_EDGE));
     ESP_ERROR_CHECK(gpio_set_intr_type(kSEL_Pin, GPIO_INTR_NEGEDGE));
@@ -101,8 +162,9 @@ void SetupInterrupts()
 // Things.
 void app_main(void)
 {
+    xTaskCreatePinnedToCore(Task_SDCardTest, "sd_card_task_core_0", 1024 * 10, NULL, 1, NULL, 0);
     esp_sio_dev::sio::SIO_Init(); // Init the SIO state machine to a default state.
-    CopyCardToRAM();            // Hacky memcpy from flash storage to ram To-Do: Load from persistant storage
+    //CopyCardToRAM();            // Hacky memcpy from flash storage to ram To-Do: Load from persistant storage
     SPI_InitPins();             // Setup the pins for SPI
     SPI_Enable();
     SetupInterrupts(); // Create a task to install our interrupt handler on Core 1
