@@ -3,7 +3,7 @@
 #include "sio.h"
 #include "spi.h"
 
-uint8_t Cur_Cmnd;
+uint8_t current_command;
 
 namespace esp_sio_dev
 {
@@ -15,7 +15,7 @@ namespace esp_sio_dev
 
             void GoIdle()
             {
-                Cur_Cmnd = Commands::kNone;
+                current_command = Commands::kNone;
                 SendAck = true;
             }
 
@@ -27,13 +27,13 @@ namespace esp_sio_dev
                 //Loop until command is properly routed
                 while (!cmdRouted)
                 {
-                    switch (Cur_Cmnd)
+                    switch (current_command)
                     {
                         // No command yet
                     case Commands::kNone:
                         // Store incoming byte as command
-                        Cur_Cmnd = DataIn;
-                        // Store FLAG byte in outbound variable
+                        current_command = DataIn;
+                        // Store flag byte in outbound variable
                         DataOut = Responses::kID;
                         // Safe to exit interpret loop
                         cmdRouted = true;

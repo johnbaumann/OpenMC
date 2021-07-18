@@ -1,6 +1,5 @@
 #include "sio.h"
 
-#include "flashdata.h"
 #include "hardware.h"
 #include "sio_controller.h"
 #include "sio_memory_card.h"
@@ -115,7 +114,8 @@ namespace esp_sio_dev
                 // Push outbound data to the SPI Data Register
                 // Data will be transferred in the next byte pair
                 SPDR = DataOut;
-                SendAck();
+                if(SendAck() == false) // SendAck returns false if ack not sent, i.e. slave no longer selected
+                    spi_selected = false;
 
                 // If data is ready for card, store it.
                 // This takes a bit so this is done after SPDR + ACK

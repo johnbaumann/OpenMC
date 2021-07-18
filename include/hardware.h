@@ -2,7 +2,6 @@
 #define _HARDWARE_H
 
 #include <driver/gpio.h>
-
 #include <esp_log.h>
 
 const gpio_num_t kMISO_Pin = GPIO_NUM_32; // To PS1 Pin 1, DATA
@@ -13,7 +12,7 @@ const gpio_num_t kACK_Pin = GPIO_NUM_27; // To PS1 Pin 8, ACK
 
 #define nop() __asm__ __volatile__("nop;")
 
-inline void SendAck()
+inline bool SendAck()
 {
     // Delay ~10uS from last clock pulse
 
@@ -21,12 +20,13 @@ inline void SendAck()
     // 30 = 10
 
     // To-do: Check timing
-    for (int i = 0; i < 25; i++)
+    for (int i = 0; i < 30; i++)
     {
         //nop();
         if (gpio_get_level(kSEL_Pin) == 1)
         {
-            return;
+            // Return false, ack not sent
+            return false;
         }
     }
 
@@ -47,6 +47,9 @@ inline void SendAck()
 
     // Put ACK back high
     gpio_set_level(kACK_Pin, 1);
+
+    // Return true, ack sent
+    return true;
 }
 
 #endif // _HARDWARE_H

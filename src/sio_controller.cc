@@ -9,8 +9,8 @@ namespace esp_sio_dev
     {
         namespace controller
         {
-            uint8_t Cur_Cmnd;
-            uint8_t Cmnd_Ticks;
+            uint8_t current_command;
+            uint8_t command_ticks;
 
             uint16_t DigitalSwitches = 0xFFFF;
             uint16_t Analog1 = 0xFFFF;
@@ -22,8 +22,8 @@ namespace esp_sio_dev
 
             void GoIdle()
             {
-                Cur_Cmnd = Commands::kNone;
-                Cmnd_Ticks = 0;
+                current_command = Commands::kNone;
+                command_ticks = 0;
                 SendAck = true;
                 //uint8_t Controller_TAP = 0x00;
             }
@@ -35,12 +35,12 @@ namespace esp_sio_dev
 
                 while (!cmdRouted)
                 {
-                    switch (Cur_Cmnd)
+                    switch (current_command)
                     {
                     // No command yet
                     case Commands::kNone:
                         // Store incoming byte as command
-                        Cur_Cmnd = DataIn;
+                        current_command = DataIn;
                         // Store low byte of Pad type
                         DataOut = lowByte(ControllerTypes::kDigitalPad);
                         // Safe to exit interpret loop
@@ -50,13 +50,13 @@ namespace esp_sio_dev
                     case Commands::kAccess:
                         if (DataIn == Commands::kRead)
                         {
-                            Cur_Cmnd = DataIn;
+                            current_command = DataIn;
                             // Re-evaluate command
                             // cmdRouted = false;
                         }
                         else
                         {
-                            Cur_Cmnd = Commands::kError;
+                            current_command = Commands::kError;
                             // Re-evaluate command
                             // cmdRouted = false;
                         }
@@ -85,7 +85,7 @@ namespace esp_sio_dev
 
                 SendAck = true; // Default true;
 
-                switch (Cmnd_Ticks)
+                switch (command_ticks)
                 {
                     //Data is sent and received simultaneously,
                     //so the data we send isn't received by the system
@@ -123,7 +123,7 @@ namespace esp_sio_dev
                     break;
                 }
 
-                Cmnd_Ticks++;
+                command_ticks++;
 
                 return DataOut;
             }

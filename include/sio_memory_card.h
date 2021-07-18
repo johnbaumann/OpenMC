@@ -11,7 +11,7 @@ namespace esp_sio_dev
         {
 
             // Implement actual bit manipulation later
-            // Need more info on FLAG bits.
+            // Need more info on flag bits.
             enum Flags : uint8_t
             {
                 kDirectoryUnread = 0x08, // Initial power on value
@@ -61,13 +61,13 @@ namespace esp_sio_dev
 
             };
 
-            extern uint8_t MemCardRAM[131072];
-            extern uint8_t FLAG;
+            extern uint8_t memory_card_ram[131072];
+            extern uint8_t flag;
 
-            extern uint16_t Sector;
+            extern uint16_t sector;
             
-            extern uint8_t GameID[256];
-            extern uint8_t GameID_Length;
+            extern uint8_t game_id[256];
+            extern uint8_t game_id_length;
 
             void Commit();
             void GoIdle();
