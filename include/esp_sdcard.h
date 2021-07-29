@@ -1,9 +1,13 @@
 #ifndef _APP_SDCARD_H
 #define _APP_SDCARD_H
 
-extern bool sd_mounted;
 
-void mount_sdcard(void);
-void Task_SDCardTest(void *params);
+namespace esp_sio_dev
+{
+    extern bool sd_mounted;
+
+    void mount_sdcard(void);
+    void Task_MountSDCard(void *params);
+}
 
 #endif // _APP_SDCARD_H

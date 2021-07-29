@@ -7,6 +7,7 @@
 
 #include <esp_log.h>
 #include <esp_attr.h>
+#include <esp32/rom/ets_sys.h>
 
 #include <stdio.h>
 
@@ -40,7 +41,6 @@ namespace esp_sio_dev
         if (uncommited_write)
         {
           // Write buffer to memory page
-          // To-do: Write directly to ram, skip data buffer
           for (int i = 0; i < 128; i++)
           {
             memory_card_ram[(sector * 128) + i] = data_buffer[i];
@@ -109,6 +109,7 @@ namespace esp_sio_dev
               break;
 
             default:
+              ets_printf("Unexpected MC command %x\n", data_in);
               current_command = Commands::kError;
               // Re-evaluate command
               // command_routed = false;

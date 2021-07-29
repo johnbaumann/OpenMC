@@ -6,9 +6,9 @@
 
 const gpio_num_t kMISO_Pin = GPIO_NUM_32; // To PS1 Pin 1, DATA
 const gpio_num_t kMOSI_Pin = GPIO_NUM_33; // To PS1 Pin 2, CMND
-const gpio_num_t kSEL_Pin = GPIO_NUM_25; // To PS1 Pin 6, ATT
-const gpio_num_t kCLK_Pin = GPIO_NUM_26; // To PS1 Pin 7, CLK
-const gpio_num_t kACK_Pin = GPIO_NUM_27; // To PS1 Pin 8, ACK
+const gpio_num_t kSEL_Pin = GPIO_NUM_25;  // To PS1 Pin 6, ATT
+const gpio_num_t kCLK_Pin = GPIO_NUM_26;  // To PS1 Pin 7, CLK
+const gpio_num_t kACK_Pin = GPIO_NUM_27;  // To PS1 Pin 8, ACK
 
 #define nop() __asm__ __volatile__("nop;")
 

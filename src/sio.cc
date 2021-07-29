@@ -6,17 +6,19 @@
 #include "sio_net_yaroze.h"
 #include "spi.h"
 
+#include <esp32/rom/ets_sys.h>
+
 namespace esp_sio_dev
 {
     namespace sio
     {
-        uint8_t CurrentSIOCommand = PS1_SIOCommands::Idle;
+        uint8_t current_command = PS1_SIOCommands::Idle;
 
-        bool bMemCardEnabled = true;
-        bool bPadEnabled = false;
-        bool bNYEnabled = false;
+        bool memory_card_enabled = true;
+        bool pad_enabled = false;
+        bool net_yaroze_enabled = false;
 
-        void SIO_GoIdle()
+        void GoIdle()
         {
             // Reset emulated device commands/variables
             controller::GoIdle();
@@ -24,98 +26,102 @@ namespace esp_sio_dev
             net_yaroze::GoIdle();
         }
 
-        void SIO_Init()
+        void Init()
         {
-            SIO_GoIdle();
+            GoIdle();
         }
 
-        void IRAM_ATTR SIO_ProcessEvents()
+        void IRAM_ATTR ProcessEvents()
         {
-            uint8_t DataIn = 0x00;
-            uint8_t DataOut = 0xFF;
+            uint8_t data_in = 0x00;
+            uint8_t data_out = 0xFF;
 
             // If ignore, do nothing
-            if (CurrentSIOCommand == PS1_SIOCommands::Ignore)
+            if (current_command == PS1_SIOCommands::Ignore)
             {
                 return;
             }
             else // Enter SIO Loop
             {
                 // Nothing done yet, prepare for SIO/SPI
-                if (CurrentSIOCommand == PS1_SIOCommands::Idle)
+                if (current_command == PS1_SIOCommands::Idle)
                 {
                     // Re-enable SPI output
-                    SPI_ActiveMode();
+                    spi::ActiveMode();
 
                     // Wait for SPI transmission
-                    CurrentSIOCommand = PS1_SIOCommands::Wait;
+                    current_command = PS1_SIOCommands::Wait;
                 }
 
                 // Check SPI status register
                 // Store incoming data to variable
-                DataIn = SPDR;
+                data_in = spi::SPDR;
 
                 // Waiting for command, store incoming byte as command
-                if (CurrentSIOCommand == PS1_SIOCommands::Wait)
-                    CurrentSIOCommand = DataIn;
+                if (current_command == PS1_SIOCommands::Wait)
+                    current_command = data_in;
 
                 // Interpret incoming command
-                switch (CurrentSIOCommand)
+                switch (current_command)
                 {
 
                 // Console requests memory card, continue interpreting command
                 case PS1_SIOCommands::MC_Access:
-                    if (bMemCardEnabled)
+                    if (memory_card_enabled)
                     {
-                        // Byte exchange is offset by one
-                        // This offsets the ACK signal accordingly
-                        DataOut = memory_card::ProcessEvents(DataIn);
+                        data_out = memory_card::ProcessEvents(data_in);
                     }
                     else
                     {
-                        CurrentSIOCommand = PS1_SIOCommands::Ignore;
-                        SPI_Disable();
+                        current_command = PS1_SIOCommands::Ignore;
+                        spi::Disable();
                         return;
                     }
 
                     break;
 
                 case PS1_SIOCommands::PAD_Access:
-                    if (bPadEnabled)
+                    if (pad_enabled)
                     {
-                        DataOut = controller::ProcessEvents(DataIn);
+                        data_out = controller::ProcessEvents(data_in);
                     }
                     else
                     {
-                        CurrentSIOCommand = PS1_SIOCommands::Ignore;
-                        SPI_Disable();
+                        current_command = PS1_SIOCommands::Ignore;
+                        spi::Disable();
                         return;
                     }
                     break;
 
                 case PS1_SIOCommands::NY_Access:
-                    if (bNYEnabled)
+                    if (net_yaroze_enabled)
                     {
-                        DataOut = net_yaroze::ProcessEvents(DataIn);
+                        data_out = net_yaroze::ProcessEvents(data_in);
                     }
                     else
                     {
-                        CurrentSIOCommand = PS1_SIOCommands::Ignore;
-                        SPI_Disable();
+                        current_command = PS1_SIOCommands::Ignore;
+                        spi::Disable();
                         return;
                     }
                     break;
 
                 default: // Bad/Unexpected/Unsupported slave select command
-                    CurrentSIOCommand = PS1_SIOCommands::Ignore;
-                    SPI_Disable();
+                    ets_printf("Unexpected SIO command %x\n", current_command);
+                    current_command = PS1_SIOCommands::Ignore;
+                    spi::Disable();
                     return;
                 }
                 // Push outbound data to the SPI Data Register
                 // Data will be transferred in the next byte pair
-                SPDR = DataOut;
-                if(SendAck() == false) // SendAck returns false if ack not sent, i.e. slave no longer selected
-                    spi_selected = false;
+                spi::SPDR = data_out;
+                if (spi::enabled && current_command != PS1_SIOCommands::Ignore )
+                {
+                    if (SendAck() == false) // SendAck returns false if ack not sent, i.e. slave no longer selected
+                    {
+                        spi::selected = false;
+                    }
+                }
 
                 // If data is ready for card, store it.
                 // This takes a bit so this is done after SPDR + ACK

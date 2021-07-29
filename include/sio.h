@@ -18,16 +18,15 @@ namespace esp_sio_dev
             Ignore = 0xFF // To ignore or wait for incoming commands
         };
 
-        extern uint8_t CurrentSIOCommand;
+        extern uint8_t current_command;
 
-        extern bool bMemCardEnabled;
-        extern bool bPadEnabled;
-        extern bool bNYEnabled;
+        extern bool memory_card_enabled;
+        extern bool pad_enabled;
+        extern bool net_yaroze_enabled;
 
-        void SIO_GoIdle();
-        void SIO_Init();
-        void SIO_ProcessEvents();
-        uint8_t SIO_ProcessPadEvents(uint8_t);
+        void GoIdle();
+        void Init();
+        void ProcessEvents();
     } // namespace sio
 } // namespace esp_sio_dev
 

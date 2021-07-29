@@ -10,7 +10,10 @@
 
 #include "esp_sdcard.h"
 
+#include "esp_file_helper.h"
 #include "esp_logging.h"
+#include "sio.h"
+#include "sio_memory_card.h"
 
 #include <string.h>
 #include <sys/unistd.h>
@@ -21,33 +24,36 @@
 #define MOUNT_POINT "/sdcard"
 
 // Pin mapping
-const gpio_num_t kSDPin_MISO = GPIO_NUM_14;
-const gpio_num_t kSDPin_MOSI = GPIO_NUM_4;
-const gpio_num_t kSDPin_CLK = GPIO_NUM_2;
-const gpio_num_t kSDPin_CS = GPIO_NUM_13;
+const gpio_num_t kSDPin_MISO = GPIO_NUM_14; // Orange
+const gpio_num_t kSDPin_MOSI = GPIO_NUM_4;  // Blue
+const gpio_num_t kSDPin_CLK = GPIO_NUM_2;   // Yellow
+const gpio_num_t kSDPin_CS = GPIO_NUM_13;   // Green
 
 #define SPI_DMA_CHAN (spi_dma_chan_t)1
 
-FILE *sdcard_file;
-
-void mount_sdcard(void)
+namespace esp_sio_dev
 {
-    ESP_LOGI(kLogPrefix, "sdcard entry point on core %i\n", xPortGetCoreID());
-    esp_err_t ret;
 
-    // Options for mounting the filesystem.
-    esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-        .format_if_mount_failed = false,
-        .max_files = 5,
-        .allocation_unit_size = 16 * 1024};
-    sdmmc_card_t *card;
-    const char mount_point[] = MOUNT_POINT;
-    ESP_LOGI(kLogPrefix, "Initializing SD card");
+    FILE *sdcard_file;
 
-    // Use settings defined above to initialize SD card and mount FAT filesystem.
-    // Note: esp_vfs_fat_sdmmc/sdspi_mount is all-in-one convenience functions.
-    // Please check its source code and implement error recovery when developing
-    // production applications.
+    void mount_sdcard(void)
+    {
+        ESP_LOGI(kLogPrefix, "sdcard entry point on core %i\n", xPortGetCoreID());
+        esp_err_t ret;
+
+        // Options for mounting the filesystem.
+        esp_vfs_fat_sdmmc_mount_config_t mount_config = {
+            .format_if_mount_failed = false,
+            .max_files = 5,
+            .allocation_unit_size = 16 * 1024};
+        sdmmc_card_t *card;
+        const char mount_point[] = MOUNT_POINT;
+        ESP_LOGI(kLogPrefix, "Initializing SD card");
+
+        // Use settings defined above to initialize SD card and mount FAT filesystem.
+        // Note: esp_vfs_fat_sdmmc/sdspi_mount is all-in-one convenience functions.
+        // Please check its source code and implement error recovery when developing
+        // production applications.
     ESP_LOGI(kLogPrefix, "Using SPI peripheral");
 
     sdmmc_host_t host = SDSPI_HOST_DEFAULT();
@@ -73,39 +79,31 @@ void mount_sdcard(void)
 
     ret = esp_vfs_fat_sdspi_mount(mount_point, &host, &slot_config, &mount_config, &card);
 
-    if (ret != ESP_OK)
-    {
-        if (ret == ESP_FAIL)
+        if (ret != ESP_OK)
         {
-            ESP_LOGE(kLogPrefix, "Failed to mount filesystem. "
-                                 "If you want the card to be formatted, set the EXAMPLE_FORMAT_IF_MOUNT_FAILED menuconfig option.");
+            if (ret == ESP_FAIL)
+            {
+                ESP_LOGE(kLogPrefix, "Failed to mount filesystem. "
+                                     "If you want the card to be formatted, set the EXAMPLE_FORMAT_IF_MOUNT_FAILED menuconfig option.");
+            }
+            else
+            {
+                ESP_LOGE(kLogPrefix, "Failed to initialize the card (%s). "
+                                     "Make sure SD card lines have pull-up resistors in place.",
+                         esp_err_to_name(ret));
+            }
+            return;
         }
-        else
-        {
-            ESP_LOGE(kLogPrefix, "Failed to initialize the card (%s). "
-                                 "Make sure SD card lines have pull-up resistors in place.",
-                     esp_err_to_name(ret));
-        }
-        return;
+
+        // Card has been initialized, print its properties
+        //sdmmc_card_print_info(stdout, card);
     }
 
-    sdmmc_card_print_info(stdout, card);
+    void Task_MountSDCard(void *params)
+    {
+        mount_sdcard();
+        LoadCardFromFile("/sdcard/fullcard.mc", sio::memory_card::memory_card_ram);
 
-    // Card has been initialized, print its properties
-    /*
-    // All done, unmount partition and disable SPI peripheral
-    esp_vfs_fat_sdcard_unmount(mount_point, card);
-    ESP_LOGI(TAG, "Card unmounted");
-
-    //deinitialize the bus after all devices are removed
-    spi_bus_free(host.slot);*/
-}
-
-void Task_SDCardTest(void *params)
-{
-    mount_sdcard();
-
-    //LoadCardFromFile("/sdcard/fullcard.mc");
-
-    vTaskDelete(NULL); // NULL means "this task"
+        vTaskDelete(NULL); // NULL means "this task"
+    }
 }

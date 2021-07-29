@@ -9,60 +9,73 @@
 #define lowByte(w) ((uint8_t)((w)&0xff))
 #define highByte(w) ((uint8_t)((w) >> 8))
 
-extern uint8_t SPDR;
-extern bool spi_selected;
-extern bool spi_enabled;
-
-void SPI_ActiveMode();
-void SPI_Disable();
-void SPI_Enable();
-void SPI_InitPins();
-void SPI_PassiveMode();
-
-// Inlined for speed
-inline uint8_t SPI_Transceive(uint8_t data_out)
+namespace esp_sio_dev
 {
-    uint8_t data_in = 0x00;
-
-    for (int bitPos = 0; bitPos < 8; bitPos++)
+    namespace spi
     {
+        extern uint8_t SPDR;
+        extern bool selected;
+        extern bool enabled;
 
-        // Wait for clock to go low
-        while (gpio_get_level(kCLK_Pin) > 0)
+        void IRAM_ATTR InterruptHandler(void *args);
+        void ActiveMode();
+        void Disable();
+        void Enable();
+        void InitPins();
+        void PassiveMode();
+        void InstallInterrupt(void *params);
+
+        // Inlined for speed
+        inline uint8_t SPI_Transceive(uint8_t data_out)
         {
-            if (gpio_get_level(kSEL_Pin) == 1)
+            uint8_t data_in = 0x00;
+
+            for (int bitPos = 0; bitPos < 8; bitPos++)
             {
-                spi_selected = false;
-                return 0xFF;
+
+                // Wait for clock to go low
+                while (gpio_get_level(kCLK_Pin) > 0)
+                {
+                    if (gpio_get_level(kSEL_Pin) == 1)
+                    {
+                        selected = false;
+                        return 0xFF;
+                    }
+                    else
+                    {
+                        selected = true;
+                    }
+                }
+
+                if (gpio_get_level(kSEL_Pin) == 1)
+                {
+                    selected = false;
+                    return 0xFF;
+                }
+                // Write bit out while clock is low
+                gpio_set_level(kMISO_Pin, data_out & (1 << bitPos));
+
+                // Wait for clock to go high
+                while (gpio_get_level(kCLK_Pin) < 1)
+                {
+                    if (gpio_get_level(kSEL_Pin) == 1)
+                    {
+                        selected = false;
+                        return 0xFF;
+                    }
+                    else
+                    {
+                        selected = true;
+                    }
+                }
+
+                // Store current bit state
+                data_in |= gpio_get_level(kMOSI_Pin) << bitPos;
             }
-            else
-            {
-                spi_selected = true;
-            }
+
+            return data_in;
         }
-
-        // Write bit out while clock is low
-        gpio_set_level(kMISO_Pin, data_out & (1 << bitPos));
-
-        // Wait for clock to go high
-        while (gpio_get_level(kCLK_Pin) < 1)
-        {
-            if (gpio_get_level(kSEL_Pin) == 1)
-            {
-                spi_selected = false;
-                return 0xFF;
-            }
-            else
-            {
-                spi_selected = true;
-            }
-        }
-
-        // Store current bit state
-        data_in |= gpio_get_level(kMOSI_Pin) << bitPos;
     }
-
-    return data_in;
 }
 
 #endif // _SPI_H

@@ -27,6 +27,7 @@ namespace esp_sio_dev
   void LoadCardFromFile(char *filepath, void *destination)
   {
     ESP_LOGI(kLogPrefix, "LoadCardFromFile() on core %i\n", xPortGetCoreID());
+    ESP_LOGI(kLogPrefix, "Filename = %s\n", filepath);
     mc_file = fopen(filepath, "r+");
     uint8_t *dest = (uint8_t *)destination;
 
