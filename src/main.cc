@@ -16,6 +16,10 @@
 #include <driver/uart.h>
 #include <esp_intr_alloc.h>
 
+#define SD_TASK_CORE 0
+#define WIFI_TASK_CORE 0
+#define SIO_TASK_CORE 1
+
 // Refs
 // https://psx-spx.consoledev.net/
 // https://github.com/nkolban/esp32-snippets/blob/master/gpio/interrupts/test_intr.c
@@ -36,21 +40,21 @@ extern "C"
 namespace esp_sio_dev
 {
     void main(void);
-    void SetupInterrupts(); 
+    void SetupInterrupts();
 
     void SetupInterrupts()
     {
         // Create a task to install our interrupt handler on Core 1
-        xTaskCreatePinnedToCore(spi::InstallInterrupt, "spi_task_core_1", 1024 * 10, NULL, 1, NULL, 1);
+        xTaskCreatePinnedToCore(spi::InstallInterrupt, "spi_task_core_1", 1024 * 10, NULL, 1, NULL, SIO_TASK_CORE);
     }
 
     void main(void)
     {
-        xTaskCreatePinnedToCore(Task_MountSDCard, "sd_card_task_core_0", 1024 * 10, NULL, 1, NULL, 0);
-        xTaskCreatePinnedToCore(wifi_ap::Task_StartWifiAP, "wifi_ap_task_core_0", 1024 * 40, NULL, 1, NULL, 0);
-        sio::Init(); // Init the SIO state machine to a default state.
-        spi::InitPins();  // Setup the pins for SPI
-        spi::Enable();    // Enable SPI
+        xTaskCreatePinnedToCore(Task_MountSDCard, "sd_card_task_core_0", 1024 * 10, NULL, 0, NULL, SD_TASK_CORE);
+        xTaskCreatePinnedToCore(wifi_ap::Task_StartWifiAP, "wifi_ap_task_core_0", 1024 * 40, NULL, 0, NULL, WIFI_TASK_CORE);
+        sio::Init();     // Init the SIO state machine to a default state.
+        spi::InitPins(); // Setup the pins for SPI
+        spi::Enable();   // Enable SPI
         ESP_LOGI(kLogPrefix, "Free Heap = %i\n", esp_get_free_heap_size());
         SetupInterrupts(); // Create a task to install our interrupt handler on Core 1, ESP32 likes Core 0 for WiFi
     }
