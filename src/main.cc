@@ -4,6 +4,7 @@
 #include "sio.h"
 #include "sio_memory_card.h"
 #include "spi.h"
+#include "esp_wifi_ap.h"
 
 #include <stdio.h>
 #include <freertos/FreeRTOS.h>
@@ -44,6 +45,7 @@ namespace esp_sio_dev
 
     void main(void)
     {
+        wifi_ap::wifi_init_softap();
         xTaskCreatePinnedToCore(Task_MountSDCard, "sd_card_task_core_0", 1024 * 10, NULL, 1, NULL, 0);
         sio::Init(); // Init the SIO state machine to a default state.
         spi::InitPins();  // Setup the pins for SPI
