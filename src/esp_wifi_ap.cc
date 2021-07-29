@@ -1,5 +1,7 @@
 #include "esp_wifi_ap.h"
 
+#include "esp_logging.h"
+
 #include <string.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -23,6 +25,13 @@ namespace esp_sio_dev
     {
         static const char *TAG = "wifi softAP";
 
+        void Task_StartWifiAP(void *params)
+        {
+            ESP_LOGI(kLogPrefix, "Wifi AP setup task on core %i\n", xPortGetCoreID());
+            Wifi_Init_SoftAP();
+            vTaskDelete(NULL); // NULL means "this task"
+        }
+
         static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                        int32_t event_id, void *event_data)
         {
@@ -40,7 +49,7 @@ namespace esp_sio_dev
             }
         }
 
-        void wifi_init_softap(void)
+        void Wifi_Init_SoftAP(void)
         {
             //Initialize NVS
             esp_err_t ret = nvs_flash_init();
@@ -65,7 +74,7 @@ namespace esp_sio_dev
                                                                 &wifi_event_handler,
                                                                 NULL,
                                                                 NULL));
-            wifi_config_t wifi_config = {{
+            wifi_config_t wifi_config = {
                 EXAMPLE_ESP_WIFI_SSID,
                 EXAMPLE_ESP_WIFI_PASS,
                 strlen(EXAMPLE_ESP_WIFI_SSID),
@@ -75,7 +84,7 @@ namespace esp_sio_dev
                 EXAMPLE_MAX_STA_CONN,
                 100,
                 WIFI_CIPHER_TYPE_TKIP_CCMP,
-                false}};
+                false};
             if (strlen(EXAMPLE_ESP_WIFI_PASS) == 0)
             {
                 wifi_config.ap.authmode = WIFI_AUTH_OPEN;
@@ -85,7 +94,7 @@ namespace esp_sio_dev
             ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
             ESP_ERROR_CHECK(esp_wifi_start());
 
-            ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s channel:%d",
+            ESP_LOGI(TAG, "Wifi_Init_SoftAP finished. SSID:%s password:%s channel:%d",
                      EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS, EXAMPLE_ESP_WIFI_CHANNEL);
         }
     } // wifi_ap

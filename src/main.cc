@@ -1,10 +1,11 @@
 #include "esp_file_helper.h"
 #include "esp_sdcard.h"
+#include "esp_logging.h"
+#include "esp_wifi_ap.h"
 #include "hardware.h"
 #include "sio.h"
 #include "sio_memory_card.h"
 #include "spi.h"
-#include "esp_wifi_ap.h"
 
 #include <stdio.h>
 #include <freertos/FreeRTOS.h>
@@ -45,11 +46,12 @@ namespace esp_sio_dev
 
     void main(void)
     {
-        wifi_ap::wifi_init_softap();
         xTaskCreatePinnedToCore(Task_MountSDCard, "sd_card_task_core_0", 1024 * 10, NULL, 1, NULL, 0);
+        xTaskCreatePinnedToCore(wifi_ap::Task_StartWifiAP, "wifi_ap_task_core_0", 1024 * 40, NULL, 1, NULL, 0);
         sio::Init(); // Init the SIO state machine to a default state.
         spi::InitPins();  // Setup the pins for SPI
         spi::Enable();    // Enable SPI
+        ESP_LOGI(kLogPrefix, "Free Heap = %i\n", esp_get_free_heap_size());
         SetupInterrupts(); // Create a task to install our interrupt handler on Core 1, ESP32 likes Core 0 for WiFi
     }
 }

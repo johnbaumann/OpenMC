@@ -1,5 +1,6 @@
 #include "spi.h"
 
+#include "esp_logging.h"
 #include "sio.h"
 
 #include <stdint.h>
@@ -109,8 +110,7 @@ namespace esp_sio_dev
         // sickle the man!
         void InstallInterrupt(void *params)
         {
-            printf("int handler setup task on core %i\n", xPortGetCoreID());
-            printf("Free Heap = %i\n", esp_get_free_heap_size());
+            ESP_LOGI(kLogPrefix, "int handler setup task on core %i\n", xPortGetCoreID());
 
             ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_EDGE));
             ESP_ERROR_CHECK(gpio_set_intr_type(kSEL_Pin, GPIO_INTR_NEGEDGE));

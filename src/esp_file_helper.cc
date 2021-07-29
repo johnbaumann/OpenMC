@@ -44,7 +44,7 @@ namespace esp_sio_dev
       file_size = ftell(mc_file);
       if (file_size <= 0)
       {
-        printf("File is empty\n");
+        ESP_LOGE(kLogPrefix, "File is empty\n");
         fclose(mc_file);
         return;
       }
