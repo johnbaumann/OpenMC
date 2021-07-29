@@ -7,7 +7,7 @@ ESP to SD Card
 
 2   SCK
 
-3   CS
+13   CS
 
 4   MOSI // 10K resistor pullup to 3.3v
 
