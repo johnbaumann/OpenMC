@@ -23,6 +23,8 @@ namespace esp_sio_dev
 {
     namespace wifi_ap
     {
+        static void Wifi_Init_SoftAP();
+
         static const char *TAG = "wifi softAP";
 
         void Task_StartWifiAP(void *params)
@@ -49,8 +51,9 @@ namespace esp_sio_dev
             }
         }
 
-        void Wifi_Init_SoftAP(void)
+        static void Wifi_Init_SoftAP(void)
         {
+            ESP_LOGI(kLogPrefix, "Second Wifi AP setup task on core %i\n", xPortGetCoreID());
             //Initialize NVS
             esp_err_t ret = nvs_flash_init();
             if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
@@ -93,6 +96,7 @@ namespace esp_sio_dev
             ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
             ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
             ESP_ERROR_CHECK(esp_wifi_start());
+
 
             ESP_LOGI(TAG, "Wifi_Init_SoftAP finished. SSID:%s password:%s channel:%d",
                      EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS, EXAMPLE_ESP_WIFI_CHANNEL);

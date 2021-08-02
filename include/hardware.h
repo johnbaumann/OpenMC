@@ -4,11 +4,22 @@
 #include <driver/gpio.h>
 #include <esp_log.h>
 
-const gpio_num_t kMISO_Pin = GPIO_NUM_32; // To PS1 Pin 1, DATA
-const gpio_num_t kMOSI_Pin = GPIO_NUM_33; // To PS1 Pin 2, CMND
-const gpio_num_t kSEL_Pin = GPIO_NUM_25;  // To PS1 Pin 6, ATT
-const gpio_num_t kCLK_Pin = GPIO_NUM_26;  // To PS1 Pin 7, CLK
-const gpio_num_t kACK_Pin = GPIO_NUM_27;  // To PS1 Pin 8, ACK
+const gpio_num_t kMISO_Pin = GPIO_NUM_32; // To PS1 Pin 1, DATA - OUT
+const gpio_num_t kMOSI_Pin = GPIO_NUM_34; // To PS1 Pin 2, CMND - IN
+const gpio_num_t kSEL_Pin = GPIO_NUM_35;  // To PS1 Pin 6, ATT - IN
+const gpio_num_t kCLK_Pin = GPIO_NUM_39;  // To PS1 Pin 7, CLK - IN
+const gpio_num_t kCLKMIRROR_Pin = GPIO_NUM_23;  // To PS1 Pin 7, CLK - IN
+const gpio_num_t kACK_Pin = GPIO_NUM_33;  // To PS1 Pin 8, ACK - OUT
+
+
+/*
+// ADC2 Pins, possible wifi interference? Doesn't seem to be the issue
+const gpio_num_t kMISO_Pin = GPIO_NUM_32; // To PS1 Pin 1, DATA - OUT
+const gpio_num_t kMOSI_Pin = GPIO_NUM_33; // To PS1 Pin 2, CMND - IN
+const gpio_num_t kSEL_Pin = GPIO_NUM_25;  // To PS1 Pin 6, ATT - IN
+const gpio_num_t kCLK_Pin = GPIO_NUM_26;  // To PS1 Pin 7, CLK - IN
+const gpio_num_t kACK_Pin = GPIO_NUM_27;  // To PS1 Pin 8, ACK - OUT
+*/
 
 #define nop() __asm__ __volatile__("nop;")
 

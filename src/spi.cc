@@ -28,6 +28,7 @@ namespace esp_sio_dev
         void Disable()
         {
             enabled = false;
+            selected = false;
             PassiveMode();
         }
 
@@ -53,6 +54,8 @@ namespace esp_sio_dev
 
             gpio_set_pull_mode(kACK_Pin, GPIO_FLOATING);
             gpio_set_pull_mode(kMISO_Pin, GPIO_FLOATING);
+            
+            gpio_set_direction(kCLKMIRROR_Pin, GPIO_MODE_OUTPUT);
         }
 
         void PassiveMode()

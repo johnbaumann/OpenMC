@@ -18,7 +18,7 @@ namespace esp_sio_dev
     namespace memory_card
     {
 
-      uint8_t memory_card_ram[131072] = {};
+      uint8_t DRAM_ATTR memory_card_ram[131072] = {};
 
       uint8_t flag = Flags::kDirectoryUnread;
 
@@ -36,7 +36,7 @@ namespace esp_sio_dev
       uint8_t game_id[256];
       uint8_t game_id_length;
 
-      void Commit()
+      void IRAM_ATTR Commit()
       {
         if (uncommited_write)
         {
@@ -66,7 +66,7 @@ namespace esp_sio_dev
         return;
       }
 
-      void GoIdle()
+      void IRAM_ATTR GoIdle()
       {
         current_command = Commands::kNone;
         command_ticks = 0;
@@ -74,7 +74,7 @@ namespace esp_sio_dev
         sector_offset = 0;
       }
 
-      uint8_t ProcessEvents(uint8_t data_in)
+      uint8_t IRAM_ATTR ProcessEvents(uint8_t data_in)
       {
         uint8_t data_out;
         bool command_routed = false;
@@ -109,8 +109,10 @@ namespace esp_sio_dev
               break;
 
             default:
-              ets_printf("Unexpected MC command %x\n", data_in);
-              current_command = Commands::kError;
+              data_out = Responses::kIdleHighZ;
+              GoIdle();
+              //ets_printf("Unexpected MC command %x\n", data_in);
+              //current_command = Commands::kError;
               // Re-evaluate command
               // command_routed = false;
             }
@@ -151,7 +153,7 @@ namespace esp_sio_dev
         return data_out;
       }
 
-      uint8_t TickReadCommand(uint8_t &data_in)
+      uint8_t IRAM_ATTR TickReadCommand(uint8_t &data_in)
       {
         uint8_t data_out = 0xFF;
 
@@ -246,7 +248,7 @@ namespace esp_sio_dev
         return data_out;
       }
 
-      uint8_t TickWriteCommand(uint8_t &data_in)
+      uint8_t IRAM_ATTR TickWriteCommand(uint8_t &data_in)
       {
         uint8_t data_out = 0xFF;
 
@@ -332,7 +334,8 @@ namespace esp_sio_dev
           }
           else
           {
-            GoIdle();
+            current_command = PS1_SIOCommands::Ignore;
+            spi::Disable();
           }
 
           break;
@@ -343,7 +346,7 @@ namespace esp_sio_dev
         return data_out;
       }
 
-      uint8_t TickGameIDCommand(uint8_t &data_in)
+      uint8_t IRAM_ATTR TickGameIDCommand(uint8_t &data_in)
       {
         uint8_t data_out = 0xFF;
 
@@ -376,7 +379,7 @@ namespace esp_sio_dev
         return data_out;
       }
 
-      uint8_t TickPingCommand(uint8_t &data_in)
+      uint8_t IRAM_ATTR TickPingCommand(uint8_t &data_in)
       {
         uint8_t data_out = 0xFF;
 

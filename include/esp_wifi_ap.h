@@ -6,7 +6,6 @@ namespace esp_sio_dev
     namespace wifi_ap
     {
         void Task_StartWifiAP(void *params);
-        void Wifi_Init_SoftAP(void);
         
     } // wifi_ap
 } // esp_sio_dev

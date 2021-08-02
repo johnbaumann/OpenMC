@@ -18,7 +18,7 @@ namespace esp_sio_dev
         bool pad_enabled = false;
         bool net_yaroze_enabled = false;
 
-        void GoIdle()
+        void IRAM_ATTR GoIdle()
         {
             // Reset emulated device commands/variables
             controller::GoIdle();
@@ -26,7 +26,7 @@ namespace esp_sio_dev
             net_yaroze::GoIdle();
         }
 
-        void Init()
+        void IRAM_ATTR Init()
         {
             GoIdle();
         }
@@ -107,7 +107,7 @@ namespace esp_sio_dev
                     break;
 
                 default: // Bad/Unexpected/Unsupported slave select command
-                    ets_printf("Unexpected SIO command %x\n", current_command);
+                    //ets_printf("Unexpected SIO command %x\n", current_command);
                     current_command = PS1_SIOCommands::Ignore;
                     spi::Disable();
                     return;
