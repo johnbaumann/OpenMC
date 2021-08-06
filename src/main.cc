@@ -51,12 +51,12 @@ namespace esp_sio_dev
 
     void main(void)
     {
-        sio::Init();     // Init the SIO state machine to a default state.
-        spi::InitPins(); // Setup the pins for SPI
-        spi::Enable();   // Enable SPI
+        sio::Init();       // Init the SIO state machine to a default state.
+        spi::InitPins();   // Setup the pins for SPI
+        spi::Enable();     // Enable SPI
         SetupInterrupts(); // Create a task to install our interrupt handler on Core 1, ESP32 likes Core 0 for WiFi
         xTaskCreatePinnedToCore(Task_MountSDCard, "sd_card_task_core_0", 1024 * 10, NULL, 0, NULL, SD_TASK_CORE);
-        //xTaskCreatePinnedToCore(wifi_ap::Task_StartWifiAP, "wifi_ap_task_core_0", 1024 * 40, NULL, 0, NULL, WIFI_TASK_CORE);
+        xTaskCreatePinnedToCore(wifi_ap::Task_StartWifiAP, "wifi_ap_task_core_0", 1024 * 40, NULL, 0, NULL, WIFI_TASK_CORE);
         //xTaskCreatePinnedToCore(wifi_client::Task_StartWifiClient, "wifi_client_task_core_0", 1024 * 40, NULL, 0, NULL, WIFI_TASK_CORE);
         ESP_LOGI(kLogPrefix, "Free Heap = %i\n", esp_get_free_heap_size());
     }

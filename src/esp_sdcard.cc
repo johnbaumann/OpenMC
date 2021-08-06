@@ -115,6 +115,7 @@ namespace esp_sio_dev
         sio::memory_card_enabled = false;
         mount_sdcard();
         LoadCardFromFile("/sdcard/freeboot.mc", sio::memory_card::memory_card_ram);
+        //LoadCardFromFile("/sdcard/realcard.mc", sio::memory_card::memory_card_ram);
         unmount_sdcard();
 
         sio::memory_card::flag = sio::memory_card::Flags::kDirectoryUnread;

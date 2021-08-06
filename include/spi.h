@@ -18,7 +18,7 @@ namespace esp_sio_dev
         extern bool selected;
         extern bool enabled;
 
-        void IRAM_ATTR InterruptHandler(void *args);
+        void InterruptHandler(void *args);
         void ActiveMode();
         void Disable();
         void Enable();
@@ -42,7 +42,7 @@ namespace esp_sio_dev
                     // Abort if unselected
                     if (((GPIO_REG_READ(GPIO_IN1_REG) >> (kSEL_Pin - 32)) & 1U) == 1)
                     {
-                        ets_printf("SPI_Transceive bail 1\n");
+                        //ets_printf("SPI_Transceive bail 1\n");
                         selected = false;
                         return 0xFF;
                     }
@@ -51,7 +51,7 @@ namespace esp_sio_dev
                 // Abort if unselected
                 if (((GPIO_REG_READ(GPIO_IN1_REG) >> (kSEL_Pin - 32)) & 1U) == 1)
                 {
-                    ets_printf("SPI_Transceive bail 2\n");
+                    //ets_printf("SPI_Transceive bail 2\n");
                     selected = false;
                     return 0xFF;
                 }
@@ -75,7 +75,7 @@ namespace esp_sio_dev
                     // Abort if unselected
                     if (((GPIO_REG_READ(GPIO_IN1_REG) >> (kSEL_Pin - 32)) & 1U) == 1)
                     {
-                        ets_printf("SPI_Transceive bail 3\n");
+                        //ets_printf("SPI_Transceive bail 3\n");
                         selected = false;
                         return 0xFF;
                     }

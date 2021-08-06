@@ -31,7 +31,7 @@ namespace esp_sio_dev
       //bool SendAck = true;
       bool uncommited_write = false;
 
-      uint8_t data_buffer[128]; //128 on 328P
+      uint8_t DRAM_ATTR data_buffer[128]; //128 on 328P
 
       uint8_t game_id[256];
       uint8_t game_id_length;
@@ -55,8 +55,8 @@ namespace esp_sio_dev
           mc_sector_uncommitted[sector] = true;
           mc_hard_committed = false;
 
-          myparam.dest_mc_ram = memory_card_ram;
-          myparam.dest_sector = sector;
+          //myparam.dest_mc_ram = memory_card_ram;
+          //myparam.dest_sector = sector;
           //Create_Write_Task((void *)&myparam);
 
           // Clear (soft)buffer status before return
