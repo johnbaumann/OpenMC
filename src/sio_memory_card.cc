@@ -11,6 +11,8 @@
 
 #include <stdio.h>
 
+static char hello_world[] = "Hello World!\n";
+
 namespace esp_sio_dev
 {
   namespace sio
@@ -20,21 +22,21 @@ namespace esp_sio_dev
 
       uint8_t DRAM_ATTR memory_card_ram[131072] = {};
 
-      uint8_t flag = Flags::kDirectoryUnread;
+      uint8_t DRAM_ATTR flag = Flags::kDirectoryUnread;
 
-      uint8_t current_command;
-      uint16_t command_ticks;
-      uint16_t sector;
-      uint8_t sector_offset;
-      uint8_t checksum_in;
-      uint8_t checksum_out;
+      static uint8_t DRAM_ATTR current_command;
+      static uint16_t DRAM_ATTR command_ticks;
+      uint16_t DRAM_ATTR sector;
+      static uint8_t DRAM_ATTR sector_offset;
+      static uint8_t DRAM_ATTR checksum_in;
+      static uint8_t DRAM_ATTR checksum_out;
       //bool SendAck = true;
-      bool uncommited_write = false;
+      static bool DRAM_ATTR uncommited_write = false;
 
-      uint8_t DRAM_ATTR data_buffer[128]; //128 on 328P
+      static uint8_t DRAM_ATTR data_buffer[128];
 
-      uint8_t game_id[256];
-      uint8_t game_id_length;
+      uint8_t DRAM_ATTR game_id[256];
+      uint8_t DRAM_ATTR game_id_length;
 
       void IRAM_ATTR Commit()
       {
@@ -52,12 +54,8 @@ namespace esp_sio_dev
 
           //ets_printf("Soft commit sector %d\n", sector);
 
-          mc_sector_uncommitted[sector] = true;
-          mc_hard_committed = false;
-
-          //myparam.dest_mc_ram = memory_card_ram;
-          //myparam.dest_sector = sector;
-          //Create_Write_Task((void *)&myparam);
+          //mc_sector_uncommitted[sector] = true;
+          //mc_hard_committed = false;
 
           // Clear (soft)buffer status before return
           uncommited_write = false;
@@ -157,8 +155,6 @@ namespace esp_sio_dev
       {
         uint8_t data_out = 0xFF;
 
-        //SendAck = true; // Default true;
-
         switch (command_ticks)
         {
           //Data is sent and received simultaneously,
@@ -252,8 +248,6 @@ namespace esp_sio_dev
       {
         uint8_t data_out = 0xFF;
 
-        //SendAck = true; // Default true;
-
         switch (command_ticks)
         {
           // Data is sent and received simultaneously,
@@ -287,7 +281,37 @@ namespace esp_sio_dev
           sector |= data_in;
           checksum_out = (sector >> 8) ^ (sector & 0xFF);
           data_out = data_in;
+          break;
 
+        case 133: // CHK
+          checksum_in = data_in;
+          data_out = Responses::kCommandAcknowledge1;
+          break;
+
+        case 134: // 00h
+          data_out = Responses::kCommandAcknowledge2;
+          break;
+
+        case 135: // 00h
+          if (sector >= 1024)
+          {
+            data_out = Responses::kBadSector;
+          }
+          else if (checksum_in == checksum_out)
+          {
+            flag = Flags::kDirectoryRead;
+            data_out = Responses::kGoodReadWrite;
+            // If the incoming sector is within our storage, store it
+            if (sector < 1024)
+            {
+              uncommited_write = true;
+            }
+          }
+          else
+          {
+            data_out = Responses::kBadChecksum;
+          }
+          GoIdle();
           break;
 
         default:
@@ -299,38 +323,6 @@ namespace esp_sio_dev
             checksum_out ^= data_in;
             // Reply with (pre)
             data_out = data_in;
-          }
-          else if (command_ticks == 133) // CHK
-          {
-            checksum_in = data_in;
-            data_out = Responses::kCommandAcknowledge1;
-          }
-          else if (command_ticks == 134) // 00h
-          {
-            data_out = Responses::kCommandAcknowledge2;
-          }
-          else if (command_ticks == 135) // 00h
-          {
-            if (sector >= 1024)
-            {
-              data_out = Responses::kBadSector;
-            }
-            else if (checksum_in == checksum_out)
-            {
-              flag = Flags::kDirectoryRead;
-              data_out = Responses::kGoodReadWrite;
-              // If the incoming sector is within our storage, store it
-              if (sector < 1024)
-              {
-                uncommited_write = true;
-              }
-            }
-            else
-            {
-              data_out = Responses::kBadChecksum;
-            }
-
-            GoIdle();
           }
           else
           {

@@ -63,7 +63,6 @@ namespace esp_sio_dev
 
             extern uint8_t memory_card_ram[131072];
             extern uint8_t flag;
-
             extern uint16_t sector;
             
             extern uint8_t game_id[256];

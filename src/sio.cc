@@ -12,11 +12,11 @@ namespace esp_sio_dev
 {
     namespace sio
     {
-        uint8_t current_command = PS1_SIOCommands::Idle;
+        uint8_t DRAM_ATTR current_command = PS1_SIOCommands::Idle;
 
-        bool memory_card_enabled = true;
-        bool pad_enabled = false;
-        bool net_yaroze_enabled = false;
+        bool DRAM_ATTR memory_card_enabled = true;
+        bool DRAM_ATTR pad_enabled = false;
+        bool DRAM_ATTR net_yaroze_enabled = false;
 
         void IRAM_ATTR GoIdle()
         {
@@ -36,6 +36,7 @@ namespace esp_sio_dev
             uint8_t data_in = 0x00;
             uint8_t data_out = 0xFF;
 
+            
             // If ignore, do nothing
             if (current_command == PS1_SIOCommands::Ignore)
             {
@@ -43,6 +44,7 @@ namespace esp_sio_dev
             }
             else // Enter SIO Loop
             {
+                
                 // Nothing done yet, prepare for SIO/SPI
                 if (current_command == PS1_SIOCommands::Idle)
                 {
@@ -112,6 +114,7 @@ namespace esp_sio_dev
                     spi::Disable();
                     return;
                 }
+                
                 // Push outbound data to the SPI Data Register
                 // Data will be transferred in the next byte pair
                 spi::SPDR = data_out;
@@ -126,6 +129,7 @@ namespace esp_sio_dev
                 // If data is ready for card, store it.
                 // This takes a bit so this is done after SPDR + ACK
                 memory_card::Commit();
+                
             }
         }
     } // namespace sio

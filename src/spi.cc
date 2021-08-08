@@ -8,67 +8,117 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+extern volatile void *_xt_intexc_hooks[];
+
+
 namespace esp_sio_dev
 {
     namespace spi
     {
-        uint8_t SPDR = 0xFF;
-        bool selected = false;
-        bool enabled = false;
+        uint8_t DRAM_ATTR SPDR = 0xFF;
+        bool DRAM_ATTR selected = false;
+        bool DRAM_ATTR enabled = false;
+        gpio_config_t DRAM_ATTR io_conf;
 
-        void ActiveMode()
+        void IRAM_ATTR ActiveMode()
         {
-            gpio_set_level(kMISO_Pin, 1);
+            /*io_conf.intr_type = GPIO_INTR_DISABLE;
+            io_conf.pin_bit_mask = 1ULL << kMISO_Pin;
+            io_conf.mode = GPIO_MODE_OUTPUT;
+            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+            gpio_config(&io_conf);
+            REG_WRITE(GPIO_OUT1_W1TS_REG, 1 << (kMISO_Pin - 32));
+
+            io_conf.intr_type = GPIO_INTR_DISABLE;
+            io_conf.pin_bit_mask = 1ULL << kACK_Pin;
+            io_conf.mode = GPIO_MODE_OUTPUT;
+            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+            gpio_config(&io_conf);
+            REG_WRITE(GPIO_OUT1_W1TS_REG, 1 << (kACK_Pin - 32));*/
+
+            GPIO.enable1_w1ts.data = (0x1 << (kMISO_Pin - 32));
+            REG_WRITE(GPIO_OUT1_W1TS_REG, 1 << (kMISO_Pin - 32));
+            GPIO.enable1_w1ts.data = (0x1 << (kACK_Pin - 32));
+            REG_WRITE(GPIO_OUT1_W1TS_REG, 1 << (kACK_Pin - 32));
+
+            /*gpio_set_level(kMISO_Pin, 1);
             gpio_set_direction(kMISO_Pin, GPIO_MODE_OUTPUT);
 
             gpio_set_level(kACK_Pin, 1);
-            gpio_set_direction(kACK_Pin, GPIO_MODE_OUTPUT);
+            gpio_set_direction(kACK_Pin, GPIO_MODE_OUTPUT);*/
         }
 
-        void Disable()
+        void IRAM_ATTR Disable()
         {
             enabled = false;
             selected = false;
             PassiveMode();
         }
 
-        void Enable()
+        void IRAM_ATTR Enable()
         {
             enabled = true;
         }
 
-        void InitPins()
+        void IRAM_ATTR InitPins()
         {
-
             int allpins[] = {kACK_Pin, kCLK_Pin, kSEL_Pin, kMOSI_Pin, kMISO_Pin};
 
             for (int i = 0; i < 5; i++)
             {
-                gpio_reset_pin((gpio_num_t)allpins[i]);
-                gpio_set_direction((gpio_num_t)allpins[i], GPIO_MODE_INPUT);
+                io_conf.intr_type = GPIO_INTR_DISABLE;
+                io_conf.pin_bit_mask = 1ULL << allpins[i];
+                io_conf.mode = GPIO_MODE_INPUT;
+                io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+                io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+                gpio_config(&io_conf);
             }
 
-            gpio_set_pull_mode(kCLK_Pin, GPIO_PULLUP_ONLY);
-            gpio_set_pull_mode(kSEL_Pin, GPIO_PULLUP_ONLY);
-            gpio_set_pull_mode(kMOSI_Pin, GPIO_PULLUP_ONLY);
+            io_conf.intr_type = GPIO_INTR_DISABLE;
+            io_conf.pin_bit_mask = 1ULL << kCLKMIRROR_Pin;
+            io_conf.mode = GPIO_MODE_OUTPUT;
+            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+            gpio_config(&io_conf);
 
-            gpio_set_pull_mode(kACK_Pin, GPIO_FLOATING);
-            gpio_set_pull_mode(kMISO_Pin, GPIO_FLOATING);
-            
-            gpio_set_direction(kCLKMIRROR_Pin, GPIO_MODE_OUTPUT);
+            //gpio_set_pull_mode(kCLK_Pin, GPIO_PULLUP_ONLY);
+            //gpio_set_pull_mode(kSEL_Pin, GPIO_PULLUP_ONLY);
+            //gpio_set_pull_mode(kMOSI_Pin, GPIO_PULLUP_ONLY);
+
+            //gpio_set_pull_mode(kACK_Pin, GPIO_FLOATING);
+            //gpio_set_pull_mode(kMISO_Pin, GPIO_FLOATING);
+
+            //gpio_set_direction(kCLKMIRROR_Pin, GPIO_MODE_OUTPUT);
         }
 
-        void PassiveMode()
+        void IRAM_ATTR PassiveMode()
         {
-            gpio_set_direction(kACK_Pin, GPIO_MODE_INPUT);
-            gpio_set_direction(kMISO_Pin, GPIO_MODE_INPUT);
+            /*io_conf.intr_type = GPIO_INTR_DISABLE;
+            io_conf.pin_bit_mask = 1ULL << kMISO_Pin;
+            io_conf.mode = GPIO_MODE_INPUT;
+            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+            gpio_config(&io_conf);
+
+            io_conf.intr_type = GPIO_INTR_DISABLE;
+            io_conf.pin_bit_mask = 1ULL << kACK_Pin;
+            io_conf.mode = GPIO_MODE_INPUT;
+            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+            gpio_config(&io_conf);*/
+            //gpio_set_direction(kACK_Pin, GPIO_MODE_INPUT);
+            //gpio_set_direction(kMISO_Pin, GPIO_MODE_INPUT);
+
+            GPIO.enable1_w1tc.data = (0x1 << (kMISO_Pin - 32));
+            GPIO.enable1_w1tc.data = (0x1 << (kACK_Pin - 32));
         }
 
-        void IRAM_ATTR InterruptHandler(void *args)
+        uint32_t IRAM_ATTR InterruptHandler(uint32_t cause)
         {
-            // To-do: Use these for SPI timeouts
-            //int clockLowWait = 0;
-            //int clockHighWait = 0;
+            uint32_t low_io = GPIO.acpu_int;        // GPIO0~31 APP CPU interrupt status
+            uint32_t high_io = GPIO.acpu_int1.intr; //GPIO32~39 APP CPU interrupt status
 
             uint8_t lastByte = 0xFF;
 
@@ -87,9 +137,6 @@ namespace esp_sio_dev
                 lastByte = SPDR;
             }
 
-            // Status not idle, reset SIO/SPI state
-            //if (esp_sio_dev::sio::current_command != esp_sio_dev::sio::PS1_SIOCommands::Idle)
-            //{
             // Clear last command
             esp_sio_dev::sio::current_command = esp_sio_dev::sio::PS1_SIOCommands::Idle;
 
@@ -100,26 +147,31 @@ namespace esp_sio_dev
             PassiveMode();
             Enable();
 
-            /*if(esp_sio_dev::sio::memory_card::game_id_length > 0)
-        {
-            // Received game id, do a thing
-        }*/
-            //}
+            //GPIO.status1_w1tc.intr_st = GPIO.acpu_int1.intr;
+            if (high_io)
+                GPIO.status1_w1tc.intr_st = high_io;
+            if (low_io)
+                GPIO.status_w1tc = low_io;
+
+            return 0;
         }
 
         // task runs on core 1, so the ints happen on core 1
         // so as long as we're in InterruptHandler() the system won't
         // bother us with interrupts on that core.
         // sickle the man!
-        void InstallInterrupt(void *params)
+        void InstallInterrupt()
         {
-            ESP_LOGI(kLogPrefix, "int handler setup task on core %i\n", xPortGetCoreID());
+            io_conf.intr_type = GPIO_INTR_NEGEDGE;
+            io_conf.pin_bit_mask = 1ULL << kSEL_Pin;
+            io_conf.mode = GPIO_MODE_INPUT;
+            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+            io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
+            gpio_config(&io_conf);
+            GPIO.pin[kSEL_Pin].int_ena = BIT(0);
 
-            ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_EDGE));
-            ESP_ERROR_CHECK(gpio_set_intr_type(kSEL_Pin, GPIO_INTR_NEGEDGE));
-            ESP_ERROR_CHECK(gpio_isr_handler_add(kSEL_Pin, InterruptHandler, NULL));
-
-            vTaskDelete(NULL); // NULL means "this task"
+            _xt_intexc_hooks[2] = (void *)&InterruptHandler;
+            intr_matrix_set(1, ETS_GPIO_INTR_SOURCE, 19);
         }
     } // spi
 } // esp_sio_dev

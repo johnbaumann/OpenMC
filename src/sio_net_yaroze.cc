@@ -11,15 +11,14 @@ namespace esp_sio_dev
     {
         namespace net_yaroze
         {
-            bool SendAck = true;
+            bool DRAM_ATTR SendAck = true;
 
-            void GoIdle()
+            void IRAM_ATTR GoIdle()
             {
                 current_command = Commands::kNone;
-                SendAck = true;
             }
 
-            uint8_t ProcessEvents(uint8_t DataIn)
+            uint8_t IRAM_ATTR ProcessEvents(uint8_t DataIn)
             {
                 uint8_t DataOut;
                 bool cmdRouted = false;
@@ -42,8 +41,6 @@ namespace esp_sio_dev
                     case Commands::kAccess:
                         //Code not actually reached, value for debug
                         DataOut = 0xFC;
-                        //NY_GoIdle();
-                        SendAck = false;
                         cmdRouted = true;
                         break;
 

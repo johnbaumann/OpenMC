@@ -9,18 +9,18 @@ namespace esp_sio_dev
     {
         namespace controller
         {
-            uint8_t current_command;
-            uint8_t command_ticks;
+            uint8_t DRAM_ATTR current_command;
+            uint8_t DRAM_ATTR command_ticks;
 
-            uint16_t DigitalSwitches = 0xFFFF;
-            uint16_t Analog1 = 0xFFFF;
-            uint16_t Analog2 = 0xFFFF;
-            uint16_t MOT = 0x0000; //
+            uint16_t DRAM_ATTR DigitalSwitches = 0xFFFF;
+            uint16_t DRAM_ATTR Analog1 = 0xFFFF;
+            uint16_t DRAM_ATTR Analog2 = 0xFFFF;
+            uint16_t DRAM_ATTR MOT = 0x0000; //
             //uint8_t Controller_TAP = 0x00;  // Multi-player tap select, un-implemented
 
-            bool SendAck = true;
+            bool DRAM_ATTR SendAck = true;
 
-            void GoIdle()
+            void IRAM_ATTR GoIdle()
             {
                 current_command = Commands::kNone;
                 command_ticks = 0;
@@ -28,7 +28,7 @@ namespace esp_sio_dev
                 //uint8_t Controller_TAP = 0x00;
             }
 
-            uint8_t ProcessEvents(uint8_t DataIn)
+            uint8_t IRAM_ATTR ProcessEvents(uint8_t DataIn)
             {
                 uint8_t DataOut = 0xFF;
                 bool cmdRouted = false;
@@ -79,7 +79,7 @@ namespace esp_sio_dev
                 return DataOut;
             }
 
-            uint8_t ReadCmnd_Tick(uint8_t DataIn)
+            uint8_t IRAM_ATTR ReadCmnd_Tick(uint8_t DataIn)
             {
                 uint8_t DataOut;
 

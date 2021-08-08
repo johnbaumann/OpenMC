@@ -87,21 +87,14 @@
 #define STRINGIFY(s) STRINGIFY2(s)
 #define STRINGIFY2(s) #s
 
-#ifndef BLUERETRO
-uint64_t g_startup_time = 0;
-#endif
-
 // App entry point for core 0
 extern void esp_startup_start_app(void);
 
 // Entry point for core 0 from hardware init (port layer)
-#ifdef BLUERETRO
 extern void init_app_cpu_baremetal(void);
 void ld_include_my_startup_file() {}
 void start_cpu0(void) __attribute__((alias("start_cpu0_default"))) __attribute__((noreturn));
-#else
-void start_cpu0(void) __attribute__((weak, alias("start_cpu0_default"))) __attribute__((noreturn));
-#endif
+
 
 #if !CONFIG_ESP_SYSTEM_SINGLE_CORE_MODE
 // Entry point for core [1..X] from hardware init (port layer)
@@ -119,10 +112,6 @@ sys_startup_fn_t g_startup_fn[SOC_CPU_CORES_NUM] = { [0] = start_cpu0,
 };
 
 static volatile bool s_system_full_inited = false;
-#else
-#ifndef BLUERETRO
-sys_startup_fn_t g_startup_fn[1] = { start_cpu0 };
-#endif
 #endif
 
 #ifdef CONFIG_COMPILER_CXX_EXCEPTIONS
@@ -352,11 +341,9 @@ static void start_cpu0_default(void)
         ESP_EARLY_LOGI(TAG, "ESP-IDF:          %s", app_desc->idf_ver);
     }
 
-#ifdef BLUERETRO
     // Init Core1
     init_app_cpu_baremetal();
     ESP_EARLY_LOGI(TAG, "App cpu up.");
-#endif
 
     // Initialize core components and services.
     do_core_init();

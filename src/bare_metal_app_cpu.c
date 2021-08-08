@@ -43,7 +43,7 @@
 #define APP_CPU_RESERVE_ROM_DATA 1
 
 #ifndef APP_CPU_STACK_SIZE
-#define APP_CPU_STACK_SIZE 1024
+#define APP_CPU_STACK_SIZE 1024*20
 #endif
 
 #ifndef CONFIG_FREERTOS_UNICORE
@@ -78,7 +78,7 @@ static void IRAM_ATTR app_cpu_main()
     //npiso_task(NULL);
     while (1) {
 #ifdef APP_CPU_RESERVE_ROM_DATA
-        ets_printf(hello_world); // Do not specify a "Hello World" here, as this would be stored in the flash!
+        //ets_printf(hello_world); // Do not specify a "Hello World" here, as this would be stored in the flash!
 #endif
         ets_delay_us(1000000);
     }

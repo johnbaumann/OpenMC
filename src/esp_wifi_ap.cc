@@ -23,7 +23,6 @@ namespace esp_sio_dev
 {
     namespace wifi_ap
     {
-        static void Wifi_Init_SoftAP();
 
         static const char *TAG = "wifi softAP";
 
@@ -51,7 +50,7 @@ namespace esp_sio_dev
             }
         }
 
-        static void Wifi_Init_SoftAP(void)
+        void Wifi_Init_SoftAP(void)
         {
             ESP_LOGI(kLogPrefix, "Second Wifi AP setup task on core %i\n", xPortGetCoreID());
             //Initialize NVS

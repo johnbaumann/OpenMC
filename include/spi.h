@@ -18,13 +18,13 @@ namespace esp_sio_dev
         extern bool selected;
         extern bool enabled;
 
-        void InterruptHandler(void *args);
+        uint32_t IRAM_ATTR InterruptHandler(uint32_t cause);
         void ActiveMode();
         void Disable();
         void Enable();
         void InitPins();
         void PassiveMode();
-        void InstallInterrupt(void *params);
+        void InstallInterrupt();
 
         // Inlined for speed
         inline uint8_t IRAM_ATTR SPI_Transceive(uint8_t data_out)

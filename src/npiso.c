@@ -91,15 +91,18 @@ static void IRAM_ATTR set_data(uint8_t port, uint8_t data_id, uint8_t value) {
 }
 
 uint32_t IRAM_ATTR npiso_isr(uint32_t cause) {
-    uint32_t low_io = GPIO.acpu_int;
-    uint32_t high_io = GPIO.acpu_int1.intr;
+    uint32_t low_io = GPIO.acpu_int; // GPIO0~31 APP CPU interrupt status
+    uint32_t high_io = GPIO.acpu_int1.intr; //GPIO32~39 APP CPU interrupt status
     uint32_t cur_in0, cur_in1;
 
-    cur_in0 = GPIO.in;
-    cur_in1 = GPIO.in1.val;
+    cur_in0 = GPIO.in; // GPIO0~31 input value
+    cur_in1 = GPIO.in1.val; // GPIO32~39 input value
 
     /* reset bit counter, set first bit */
+    
+    // if PIN32 interrupt status
     if (high_io & NPISO_LATCH_MASK) {
+        // if LATCH high
         if (cur_in1 & NPISO_LATCH_MASK) {
             for (uint32_t i = 0; i < NPISO_PORT_MAX; i++) {
                 switch (dev_type[i]) {
@@ -184,105 +187,6 @@ uint32_t IRAM_ATTR npiso_isr(uint32_t cause) {
     if (high_io) GPIO.status1_w1tc.intr_st = high_io;
     if (low_io) GPIO.status_w1tc = low_io;
     return 0;
-}
-
-void IRAM_ATTR npiso_task(void *arg) {
-    uint32_t cur_in0, prev_in0, change0 = 0, cur_in1, prev_in1, change1 = 0;
-    uint8_t toggle = 0;
-
-    cur_in0 = GPIO.in;
-    cur_in1 = GPIO.in1.val;
-    while (1) {
-        prev_in0 = cur_in0;
-        cur_in0 = GPIO.in;
-        change0 = cur_in0 ^ prev_in0;
-        prev_in1 = cur_in1;
-        cur_in1 = GPIO.in1.val;
-        change1 = cur_in1 ^ prev_in1;
-
-        /* reset bit counter, set first bit */
-        if (change1 & NPISO_LATCH_MASK) {
-            if (cur_in1 & NPISO_LATCH_MASK) {
-                for (uint32_t i = 0; i < NPISO_PORT_MAX; i++) {
-                    switch (dev_type[i]) {
-                        case DEV_FC_MULTITAP_ALT:
-                            set_data(i, 1, output[0] & 0x80);
-                        __attribute__ ((fallthrough));
-                        case DEV_FC_NES_PAD:
-                        case DEV_FC_NES_MULTITAP:
-                        case DEV_SFC_SNES_PAD:
-                            set_data(i, 0, output[0] & 0x80);
-                            cnt[i] = 1;
-                            mask[i] = 0x40;
-                            break;
-                    }
-                }
-            }
-        }
-
-        /* data idx */
-        idx[0] = cnt[0] >> 3;
-        idx[1] = cnt[1] >> 3;
-
-        /* Update data lines on rising clock edge */
-        for (uint32_t i = 0; i < NPISO_PORT_MAX; i++) {
-            if (change0 & gpio_mask[i][NPISO_CLK]) {
-                if (cur_in0 & gpio_mask[i][NPISO_CLK]) {
-                    switch (dev_type[i]) {
-                        case DEV_FC_MULTITAP_ALT:
-                            if (idx[i]) {
-                                set_data(i, 1, 0);
-                            }
-                            else {
-                                set_data(i, 1, output[0] & mask[i]);
-                            }
-                        __attribute__ ((fallthrough));
-                        case DEV_FC_NES_PAD:
-                            if (idx[i]) {
-                                set_data(i, 0, 0);
-                            }
-                            else {
-                                set_data(i, 0, output[0] & mask[i]);
-                            }
-                            break;
-                        case DEV_FC_NES_MULTITAP:
-                            switch (idx[i]) {
-                                case 0:
-                                    set_data(i, 0, output[0] & mask[i]);
-                                    break;
-                                case 1:
-                                    set_data(i, 0, output[0] & mask[i]);
-                                    break;
-                                case 2:
-                                    set_data(i, 0, fs_id[i] & mask[i]);
-                                    break;
-                                default:
-                                    set_data(i, 0, 0);
-                                    break;
-                            }
-                            break;
-                        case DEV_SFC_SNES_PAD:
-                            if (idx[i] > 1) {
-                                set_data(i, 0, 0);
-                            }
-                            else {
-                                set_data(i, 0, output[idx[i]] & mask[i]);
-                            }
-                            break;
-                    }
-                    cnt[i]++;
-                    mask[i] >>= 1;
-                    if (!mask[i]) {
-                        mask[i] = 0x80;
-                    }
-                    set_data(0, 1, toggle ^= 0x01);
-                }
-                else {
-                    set_data(0, 1, toggle ^= 0x01);
-                }
-            }
-        }
-    }
 }
 
 void npiso_init(void)

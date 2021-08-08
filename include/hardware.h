@@ -23,7 +23,7 @@ const gpio_num_t kACK_Pin = GPIO_NUM_27;  // To PS1 Pin 8, ACK - OUT
 
 #define nop() __asm__ __volatile__("nop;")
 
-inline bool SendAck()
+inline bool IRAM_ATTR SendAck()
 {
     // Delay ~10uS from last clock pulse
 
@@ -34,7 +34,7 @@ inline bool SendAck()
     for (int i = 0; i < 30; i++)
     {
         //nop();
-        if (gpio_get_level(kSEL_Pin) == 1)
+        if (((GPIO_REG_READ(GPIO_IN1_REG) >> (kSEL_Pin - 32)) & 1U) == 1)
         {
             // Return false, ack not sent
             return false;
@@ -42,7 +42,7 @@ inline bool SendAck()
     }
 
     // Drop ACK LO
-    gpio_set_level(kACK_Pin, 0);
+    REG_WRITE(GPIO_OUT1_W1TC_REG, 1 << (kACK_Pin - 32));
 
     // Delay ~2uS
     for (int i = 0; i < 39; i++)
@@ -50,14 +50,14 @@ inline bool SendAck()
         nop();
 
         // To-do: Switch to this, check timing
-        //if(gpio_get_level(kSEL_Pin) == 1)
+        //if (((GPIO_REG_READ(GPIO_IN1_REG) >> (kSEL_Pin - 32)) & 1U) == 1)
         //{
         //    break;
         //}
     }
 
     // Put ACK back high
-    gpio_set_level(kACK_Pin, 1);
+    REG_WRITE(GPIO_OUT1_W1TS_REG, 1 << (kACK_Pin - 32));
 
     // Return true, ack sent
     return true;

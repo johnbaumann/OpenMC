@@ -7,6 +7,5 @@
 #define _NPISO_H_
 
 //void npiso_init(void);
-void IRAM_ATTR npiso_task(void *arg);
 
 #endif /* _NPISO_H_ */
