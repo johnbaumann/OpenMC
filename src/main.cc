@@ -60,6 +60,9 @@ namespace esp_sio_dev
         xTaskCreatePinnedToCore(wifi_ap::Task_StartWifiAP, "wifi_ap_task_core_0", 1024 * 40, NULL, 0, NULL, WIFI_TASK_CORE);
         //xTaskCreatePinnedToCore(wifi_client::Task_StartWifiClient, "wifi_client_task_core_0", 1024 * 40, NULL, 0, NULL, WIFI_TASK_CORE);
 
+        sio::memory_card_enabled = true;
+        sio::pad_enabled = false;
+        sio::net_yaroze_enabled = false;
 
         core0_stall_init();
         sio::Init();       // Init the SIO state machine to a default state.

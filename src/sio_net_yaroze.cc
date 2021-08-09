@@ -11,8 +11,6 @@ namespace esp_sio_dev
     {
         namespace net_yaroze
         {
-            bool DRAM_ATTR SendAck = true;
-
             void IRAM_ATTR GoIdle()
             {
                 current_command = Commands::kNone;

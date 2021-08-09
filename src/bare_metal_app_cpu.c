@@ -36,13 +36,13 @@
 #include <stdio.h>
 #include "esp32/rom/cache.h"
 
-#define BAREMETAL_APP_CPU_DEBUG 1
+#define BAREMETAL_APP_CPU_DEBUG 0
 
 // Reserve static data for built-in ROM functions
 #define APP_CPU_RESERVE_ROM_DATA 1
 
 #ifndef APP_CPU_STACK_SIZE
-#define APP_CPU_STACK_SIZE 1024*20
+#define APP_CPU_STACK_SIZE 1024*10
 #endif
 
 #ifndef CONFIG_FREERTOS_UNICORE
@@ -59,12 +59,6 @@ static volatile uint8_t app_cpu_initial_start;
 SOC_RESERVE_MEMORY_REGION(0x3ffe3f20, 0x3ffe4350, rom_app_data);
 #endif
 
-
-
-#ifdef APP_CPU_RESERVE_ROM_DATA
-// Can't load from flash, therefore the string needs to be placed in the RAM
-static char hello_world[] = "Hello World!\n";
-#endif
 
 // APP CPU cache is part of the main memory pool and we can't get the caches to work easily anyway because cache loads need to be synchronized.
 // So for now the app core can only execute from IRAM (and internal ROM).

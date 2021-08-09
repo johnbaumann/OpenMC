@@ -12,7 +12,6 @@
 
 extern volatile void *_xt_intexc_hooks[];
 
-
 namespace esp_sio_dev
 {
     namespace spi
@@ -24,32 +23,8 @@ namespace esp_sio_dev
 
         void IRAM_ATTR ActiveMode()
         {
-            /*io_conf.intr_type = GPIO_INTR_DISABLE;
-            io_conf.pin_bit_mask = 1ULL << kMISO_Pin;
-            io_conf.mode = GPIO_MODE_OUTPUT;
-            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-            gpio_config(&io_conf);
-            REG_WRITE(GPIO_OUT1_W1TS_REG, 1 << (kMISO_Pin - 32));
-
-            io_conf.intr_type = GPIO_INTR_DISABLE;
-            io_conf.pin_bit_mask = 1ULL << kACK_Pin;
-            io_conf.mode = GPIO_MODE_OUTPUT;
-            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-            gpio_config(&io_conf);
-            REG_WRITE(GPIO_OUT1_W1TS_REG, 1 << (kACK_Pin - 32));*/
-
-            GPIO.enable1_w1ts.data = (0x1 << (kMISO_Pin - 32));
-            REG_WRITE(GPIO_OUT1_W1TS_REG, 1 << (kMISO_Pin - 32));
-            GPIO.enable1_w1ts.data = (0x1 << (kACK_Pin - 32));
-            REG_WRITE(GPIO_OUT1_W1TS_REG, 1 << (kACK_Pin - 32));
-
-            /*gpio_set_level(kMISO_Pin, 1);
-            gpio_set_direction(kMISO_Pin, GPIO_MODE_OUTPUT);
-
-            gpio_set_level(kACK_Pin, 1);
-            gpio_set_direction(kACK_Pin, GPIO_MODE_OUTPUT);*/
+            REG_WRITE(GPIO_ENABLE1_W1TS_REG, (kMISO_Bitmask | kACK_Bitmask));
+            REG_WRITE(GPIO_OUT1_W1TS_REG, (kMISO_Bitmask | kACK_Bitmask));
         }
 
         void IRAM_ATTR Disable()
@@ -66,6 +41,7 @@ namespace esp_sio_dev
 
         void IRAM_ATTR InitPins()
         {
+            // To-do: Change over to REG_WRITE ?
             int allpins[] = {kACK_Pin, kCLK_Pin, kSEL_Pin, kMOSI_Pin, kMISO_Pin};
 
             for (int i = 0; i < 5; i++)
@@ -78,50 +54,24 @@ namespace esp_sio_dev
                 gpio_config(&io_conf);
             }
 
-            io_conf.intr_type = GPIO_INTR_DISABLE;
+            // Clock mirror signal, debug only
+            /*io_conf.intr_type = GPIO_INTR_DISABLE;
             io_conf.pin_bit_mask = 1ULL << kCLKMIRROR_Pin;
             io_conf.mode = GPIO_MODE_OUTPUT;
             io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
             io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-            gpio_config(&io_conf);
-
-            //gpio_set_pull_mode(kCLK_Pin, GPIO_PULLUP_ONLY);
-            //gpio_set_pull_mode(kSEL_Pin, GPIO_PULLUP_ONLY);
-            //gpio_set_pull_mode(kMOSI_Pin, GPIO_PULLUP_ONLY);
-
-            //gpio_set_pull_mode(kACK_Pin, GPIO_FLOATING);
-            //gpio_set_pull_mode(kMISO_Pin, GPIO_FLOATING);
-
-            //gpio_set_direction(kCLKMIRROR_Pin, GPIO_MODE_OUTPUT);
+            gpio_config(&io_conf);*/
         }
 
         void IRAM_ATTR PassiveMode()
         {
-            /*io_conf.intr_type = GPIO_INTR_DISABLE;
-            io_conf.pin_bit_mask = 1ULL << kMISO_Pin;
-            io_conf.mode = GPIO_MODE_INPUT;
-            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-            gpio_config(&io_conf);
-
-            io_conf.intr_type = GPIO_INTR_DISABLE;
-            io_conf.pin_bit_mask = 1ULL << kACK_Pin;
-            io_conf.mode = GPIO_MODE_INPUT;
-            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-            gpio_config(&io_conf);*/
-            //gpio_set_direction(kACK_Pin, GPIO_MODE_INPUT);
-            //gpio_set_direction(kMISO_Pin, GPIO_MODE_INPUT);
-
-            GPIO.enable1_w1tc.data = (0x1 << (kMISO_Pin - 32));
-            GPIO.enable1_w1tc.data = (0x1 << (kACK_Pin - 32));
+            REG_WRITE(GPIO_ENABLE1_W1TC_REG, (kMISO_Bitmask | kACK_Bitmask));
         }
 
         uint32_t IRAM_ATTR InterruptHandler(uint32_t cause)
         {
+            // Stall core0 to prevent interruptions
             core0_stall_start();
-            uint32_t low_io = GPIO.acpu_int;        // GPIO0~31 APP CPU interrupt status
-            uint32_t high_io = GPIO.acpu_int1.intr; //GPIO32~39 APP CPU interrupt status
 
             uint8_t lastByte = 0xFF;
 
@@ -150,13 +100,11 @@ namespace esp_sio_dev
             PassiveMode();
             Enable();
 
-            //GPIO.status1_w1tc.intr_st = GPIO.acpu_int1.intr;
-            if (high_io)
-                GPIO.status1_w1tc.intr_st = high_io;
-            if (low_io)
-                GPIO.status_w1tc = low_io;
+            // Clear interrupt status
+            REG_WRITE(GPIO_STATUS1_W1TC_REG, REG_READ(GPIO_ACPU_INT1_REG));
 
-            core0_stall_end();    
+            // Resume core0
+            core0_stall_end();
             return 0;
         }
 

@@ -33,8 +33,8 @@ namespace esp_sio_dev
 
             for (int bitPos = 0; bitPos < 8; bitPos++)
             {
-                // Mirror clock signal, high
-                REG_WRITE(GPIO_OUT_W1TS_REG, 1 << (kCLKMIRROR_Pin));
+                // Mirror clock signal, high - debugging only
+                //REG_WRITE(GPIO_OUT_W1TS_REG, 1 << (kCLKMIRROR_Pin));
 
                 // Wait for clock to go low
                 while (((GPIO_REG_READ(GPIO_IN1_REG) >> (kCLK_Pin - 32)) & 1U) == 1)
@@ -59,15 +59,17 @@ namespace esp_sio_dev
                 // Write bit out while clock is low
                 if (data_out & (1 << bitPos))
                 {
-                    REG_WRITE(GPIO_OUT1_W1TS_REG, 1 << (kMISO_Pin - 32));
+                    // if bit is set, write to the bit set register
+                    REG_WRITE(GPIO_OUT1_W1TS_REG, kMISO_Bitmask);
                 }
                 else
                 {
-                    REG_WRITE(GPIO_OUT1_W1TC_REG, 1 << (kMISO_Pin - 32));
+                    // if bit is clear, write to the bit clear register
+                    REG_WRITE(GPIO_OUT1_W1TC_REG, kMISO_Bitmask);
                 }
 
-                // Mirror clock signal, low
-                REG_WRITE(GPIO_OUT_W1TC_REG, 1 << (kCLKMIRROR_Pin));
+                // Mirror clock signal, low - debugging only
+                //REG_WRITE(GPIO_OUT_W1TC_REG, 1 << (kCLKMIRROR_Pin));
 
                 // Wait for clock to go high
                 while (((GPIO_REG_READ(GPIO_IN1_REG) >> (kCLK_Pin - 32)) & 1U) == 0)
@@ -81,7 +83,8 @@ namespace esp_sio_dev
                     }
                 }
 
-                REG_WRITE(GPIO_OUT_W1TS_REG, 1 << (kCLKMIRROR_Pin));
+                // Mirror clock signal, high - debugging only
+                //REG_WRITE(GPIO_OUT_W1TS_REG, 1 << (kCLKMIRROR_Pin));
 
                 // Store current bit state
                 data_in |= ((GPIO_REG_READ(GPIO_IN1_REG) >> (kMOSI_Pin - 32)) & 1U) << bitPos;

@@ -11,8 +11,6 @@
 
 #include <stdio.h>
 
-static char hello_world[] = "Hello World!\n";
-
 namespace esp_sio_dev
 {
   namespace sio
@@ -30,7 +28,6 @@ namespace esp_sio_dev
       static uint8_t DRAM_ATTR sector_offset;
       static uint8_t DRAM_ATTR checksum_in;
       static uint8_t DRAM_ATTR checksum_out;
-      //bool SendAck = true;
       static bool DRAM_ATTR uncommited_write = false;
 
       static uint8_t DRAM_ATTR data_buffer[128];
@@ -52,11 +49,6 @@ namespace esp_sio_dev
           if (sector == 0x0000)
             flag = Flags::kDirectoryUnread;
 
-          //ets_printf("Soft commit sector %d\n", sector);
-
-          //mc_sector_uncommitted[sector] = true;
-          //mc_hard_committed = false;
-
           // Clear (soft)buffer status before return
           uncommited_write = false;
         }
@@ -68,7 +60,6 @@ namespace esp_sio_dev
       {
         current_command = Commands::kNone;
         command_ticks = 0;
-        //SendAck = true;
         sector_offset = 0;
       }
 
@@ -109,8 +100,6 @@ namespace esp_sio_dev
             default:
               data_out = Responses::kIdleHighZ;
               GoIdle();
-              //ets_printf("Unexpected MC command %x\n", data_in);
-              //current_command = Commands::kError;
               // Re-evaluate command
               // command_routed = false;
             }
@@ -213,7 +202,6 @@ namespace esp_sio_dev
 
         case 137:
           data_out = Responses::kGoodReadWrite;
-          //SendAck = false;
           break;
 
         default:

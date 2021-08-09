@@ -52,7 +52,6 @@ namespace esp_sio_dev
 
         void Wifi_Init_SoftAP(void)
         {
-            ESP_LOGI(kLogPrefix, "Second Wifi AP setup task on core %i\n", xPortGetCoreID());
             //Initialize NVS
             esp_err_t ret = nvs_flash_init();
             if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)

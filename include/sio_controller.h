@@ -33,7 +33,6 @@ namespace esp_sio_dev
                 kIdleHighZ = 0xFFFF       // (no controller connected, pins floating High-Z)
             };
 
-            extern bool SendAck;
             extern uint16_t DigitalSwitches;
             extern uint16_t Analog1;
             extern uint16_t Analog2;

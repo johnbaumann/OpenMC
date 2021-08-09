@@ -18,13 +18,10 @@ namespace esp_sio_dev
             uint16_t DRAM_ATTR MOT = 0x0000; //
             //uint8_t Controller_TAP = 0x00;  // Multi-player tap select, un-implemented
 
-            bool DRAM_ATTR SendAck = true;
-
             void IRAM_ATTR GoIdle()
             {
                 current_command = Commands::kNone;
                 command_ticks = 0;
-                SendAck = true;
                 //uint8_t Controller_TAP = 0x00;
             }
 
@@ -83,8 +80,6 @@ namespace esp_sio_dev
             {
                 uint8_t DataOut;
 
-                SendAck = true; // Default true;
-
                 switch (command_ticks)
                 {
                     //Data is sent and received simultaneously,
@@ -114,7 +109,6 @@ namespace esp_sio_dev
                     MOT |= DataIn;
                     DataOut = 0xFC;
                     //PAD_GoIdle();
-                    SendAck = false;
                     break;
 
                 default:

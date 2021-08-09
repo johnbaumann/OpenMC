@@ -64,7 +64,9 @@ namespace esp_sio_dev
             .sclk_io_num = kSDPin_CLK,
             .quadwp_io_num = -1,
             .quadhd_io_num = -1,
-            .max_transfer_sz = 4000};
+            .max_transfer_sz = 4000,
+            .flags = SPICOMMON_BUSFLAG_MASTER,
+            .intr_flags = 0};
         ret = spi_bus_initialize((spi_host_device_t)host.slot, &bus_cfg, SPI_DMA_CHAN);
         if (ret != ESP_OK)
         {
@@ -112,15 +114,16 @@ namespace esp_sio_dev
 
     void Task_MountSDCard(void *params)
     {
+        bool old_mc_status = sio::memory_card_enabled;
         sio::memory_card_enabled = false;
         mount_sdcard();
-        LoadCardFromFile("/sdcard/freeboot.mc", sio::memory_card::memory_card_ram);
+        LoadCardFromFile((char*)"/sdcard/freeboot.mc", sio::memory_card::memory_card_ram);
         //LoadCardFromFile("/sdcard/realcard.mc", sio::memory_card::memory_card_ram);
-        unmount_sdcard();
+        //unmount_sdcard();
 
         sio::memory_card::flag = sio::memory_card::Flags::kDirectoryUnread;
         sio::memory_card::GoIdle();
-        sio::memory_card_enabled = true;
+        sio::memory_card_enabled = old_mc_status;
 
         vTaskDelete(NULL); // NULL means "this task"
     }

@@ -14,7 +14,7 @@
 #include <lwip/sys.h>
 
 #define EXAMPLE_ESP_WIFI_SSID "esp-sio-client"
-#define EXAMPLE_ESP_WIFI_PASS "espdevsuxdude!"
+#define EXAMPLE_ESP_WIFI_PASS "espdevrulezdude!"
 #define EXAMPLE_ESP_MAXIMUM_RETRY 5
 
 /* The event group allows multiple bits for each event, but we only care about two events:
@@ -111,9 +111,19 @@ namespace esp_sio_dev
                 .sta = {
                     EXAMPLE_ESP_WIFI_SSID,
                     EXAMPLE_ESP_WIFI_PASS,
+                    .scan_method = WIFI_FAST_SCAN,
+                    .bssid_set = 0,
+                    .bssid = {},
+                    .channel = 0,
+                    .listen_interval = 0,
+                    .sort_method = WIFI_CONNECT_AP_BY_SIGNAL,
+                    .threshold = { },
                     .pmf_cfg = {
                         true,
                         false},
+                    .rm_enabled = 1,
+                    .btm_enabled = 1,
+                    .reserved = 30
                 },
             };
             ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));

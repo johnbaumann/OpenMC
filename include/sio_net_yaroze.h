@@ -30,8 +30,6 @@ namespace esp_sio_dev
                 // NY checks for the access card until it is found
                 // Shorting DATA to GND is enough to satisfy the acceess card check
             };
-
-            extern bool SendAck;
         } // namespace net_yaroze
     }     // namespace sio
 } // namespace esp_sio_dev
