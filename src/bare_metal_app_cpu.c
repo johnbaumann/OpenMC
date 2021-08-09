@@ -35,7 +35,6 @@
 #include <xtensa/xtensa_api.h>
 #include <stdio.h>
 #include "esp32/rom/cache.h"
-#include "npiso.h"
 
 #define BAREMETAL_APP_CPU_DEBUG 1
 

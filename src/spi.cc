@@ -3,6 +3,8 @@
 #include "esp_logging.h"
 #include "sio.h"
 
+#include "core0_stall.h"
+
 #include <stdint.h>
 #include <esp_system.h>
 #include <freertos/FreeRTOS.h>
@@ -117,6 +119,7 @@ namespace esp_sio_dev
 
         uint32_t IRAM_ATTR InterruptHandler(uint32_t cause)
         {
+            core0_stall_start();
             uint32_t low_io = GPIO.acpu_int;        // GPIO0~31 APP CPU interrupt status
             uint32_t high_io = GPIO.acpu_int1.intr; //GPIO32~39 APP CPU interrupt status
 
@@ -153,6 +156,7 @@ namespace esp_sio_dev
             if (low_io)
                 GPIO.status_w1tc = low_io;
 
+            core0_stall_end();    
             return 0;
         }
 

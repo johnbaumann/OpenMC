@@ -8,7 +8,7 @@
 #include "sio_memory_card.h"
 #include "spi.h"
 
-#include "npiso.h"
+#include "core0_stall.h"
 
 #include <stdio.h>
 #include <freertos/FreeRTOS.h>
@@ -51,8 +51,6 @@ namespace esp_sio_dev
 
     void SetupInterrupts()
     {
-        // Create a task to install our interrupt handler on Core 1
-        //xTaskCreatePinnedToCore(spi::InstallInterrupt, "spi_task_core_1", 1024 * 10, NULL, 1, NULL, SIO_TASK_CORE);
         spi::InstallInterrupt();
     }
 
@@ -63,6 +61,7 @@ namespace esp_sio_dev
         //xTaskCreatePinnedToCore(wifi_client::Task_StartWifiClient, "wifi_client_task_core_0", 1024 * 40, NULL, 0, NULL, WIFI_TASK_CORE);
 
 
+        core0_stall_init();
         sio::Init();       // Init the SIO state machine to a default state.
         spi::InitPins();   // Setup the pins for SPI
         spi::Enable();     // Enable SPI
