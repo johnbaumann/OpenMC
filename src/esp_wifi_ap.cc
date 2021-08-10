@@ -1,5 +1,6 @@
 #include "esp_wifi_ap.h"
 
+#include "esp_file_server.h"
 #include "esp_logging.h"
 
 #include <string.h>
@@ -98,6 +99,10 @@ namespace esp_sio_dev
 
             ESP_LOGI(TAG, "Wifi_Init_SoftAP finished. SSID:%s password:%s channel:%d",
                      EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS, EXAMPLE_ESP_WIFI_CHANNEL);
+
+
+            file_server::net_interface_ready = true;
+            
         }
     } // wifi_ap
 } // esp_sio_dev

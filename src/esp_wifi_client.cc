@@ -1,5 +1,7 @@
 #include "esp_wifi_client.h"
 
+#include "esp_file_server.h"
+
 #include <string.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -13,6 +15,7 @@
 #include <lwip/err.h>
 #include <lwip/sys.h>
 
+// To-do: Save/load this to SD, WiFi AP for configuration mode?
 #define EXAMPLE_ESP_WIFI_SSID "esp-sio-client"
 #define EXAMPLE_ESP_WIFI_PASS "espdevrulezdude!"
 #define EXAMPLE_ESP_MAXIMUM_RETRY 5
@@ -146,6 +149,8 @@ namespace esp_sio_dev
             {
                 ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
                          EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+
+                file_server::net_interface_ready = true;
             }
             else if (bits & WIFI_FAIL_BIT)
             {

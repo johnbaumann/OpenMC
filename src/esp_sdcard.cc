@@ -11,10 +11,13 @@
 #include "esp_sdcard.h"
 
 #include "esp_file_helper.h"
+#include "esp_file_server.h"
 #include "esp_logging.h"
 #include "sio.h"
 #include "sio_memory_card.h"
 
+#include <dirent.h>
+#include <esp_vfs.h>
 #include <string.h>
 #include <sys/unistd.h>
 #include <sys/stat.h>
@@ -22,6 +25,7 @@
 #include <sdmmc_cmd.h>
 
 #define MOUNT_POINT "/sdcard"
+#define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 
 // Pin mapping
 const gpio_num_t kSDPin_MISO = GPIO_NUM_14; // Orange
@@ -57,7 +61,6 @@ namespace esp_sio_dev
         // production applications.
         ESP_LOGI(kLogPrefix, "Using SPI peripheral");
 
-        
         spi_bus_config_t bus_cfg = {
             .mosi_io_num = kSDPin_MOSI,
             .miso_io_num = kSDPin_MISO,
@@ -99,7 +102,7 @@ namespace esp_sio_dev
         }
 
         // Card has been initialized, print its properties
-        sdmmc_card_print_info(stdout, card);
+        //sdmmc_card_print_info(stdout, card);
     }
 
     void unmount_sdcard(void)
@@ -114,17 +117,8 @@ namespace esp_sio_dev
 
     void Task_MountSDCard(void *params)
     {
-        bool old_mc_status = sio::memory_card_enabled;
-        sio::memory_card_enabled = false;
         mount_sdcard();
-        LoadCardFromFile((char*)"/sdcard/freeboot.mc", sio::memory_card::memory_card_ram);
-        //LoadCardFromFile("/sdcard/realcard.mc", sio::memory_card::memory_card_ram);
-        //unmount_sdcard();
-
-        sio::memory_card::flag = sio::memory_card::Flags::kDirectoryUnread;
-        sio::memory_card::GoIdle();
-        sio::memory_card_enabled = old_mc_status;
-
+        LoadCardFromFile((char *)"/sdcard/freeboot.mc", sio::memory_card::memory_card_ram);
         vTaskDelete(NULL); // NULL means "this task"
     }
 }

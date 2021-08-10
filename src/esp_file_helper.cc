@@ -1,4 +1,6 @@
 #include "esp_file_helper.h"
+#include "sio.h"
+#include "sio_memory_card.h"
 
 #include "esp_logging.h"
 
@@ -26,8 +28,10 @@ namespace esp_sio_dev
 
   void LoadCardFromFile(char *filepath, void *destination)
   {
-    ESP_LOGI(kLogPrefix, "LoadCardFromFile() on core %i\n", xPortGetCoreID());
-    ESP_LOGI(kLogPrefix, "Filename = %s\n", filepath);
+    bool old_mc_status = sio::memory_card_enabled;
+    sio::memory_card_enabled = false;
+
+    ESP_LOGI(kLogPrefix, "LoadCardFromFile(%s)\n", filepath);
     mc_file = fopen(filepath, "r+");
     uint8_t *dest = (uint8_t *)destination;
 
@@ -36,6 +40,7 @@ namespace esp_sio_dev
     if (!mc_file)
     {
       ESP_LOGE(kLogPrefix, "Error opening file!\n");
+      sio::memory_card_enabled = old_mc_status;
       return;
     }
     else
@@ -46,6 +51,7 @@ namespace esp_sio_dev
       {
         ESP_LOGE(kLogPrefix, "File is empty\n");
         fclose(mc_file);
+        sio::memory_card_enabled = old_mc_status;
         return;
       }
 
@@ -65,6 +71,14 @@ namespace esp_sio_dev
         }
       }
     }
+
+    sio::memory_card::flag = sio::memory_card::Flags::kDirectoryUnread;
+    sio::memory_card::GoIdle();
+    
+    // Make sure MC stays inactive long enough for BIOS to detect change
+    // To-do: Adjust lower and test
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    sio::memory_card_enabled = old_mc_status;
   }
 
   static void Task_HardCommit(void *params)
