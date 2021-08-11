@@ -18,17 +18,19 @@ namespace esp_sio_dev
     {
         uint8_t DRAM_ATTR SPDR = 0xFF;
         bool DRAM_ATTR selected = false;
-        bool DRAM_ATTR enabled = false;
-        gpio_config_t DRAM_ATTR io_conf;
+        bool DRAM_ATTR enabled = false; // AVR artifact(SPSR), contemplate the existance of this
 
         void IRAM_ATTR ActiveMode()
         {
+            // Enable MISO and ACK pins
             REG_WRITE(GPIO_ENABLE1_W1TS_REG, (kMISO_Bitmask | kACK_Bitmask));
+            // Set MISO and ACK pins HIGH
             REG_WRITE(GPIO_OUT1_W1TS_REG, (kMISO_Bitmask | kACK_Bitmask));
         }
 
         void IRAM_ATTR Disable()
         {
+            // Set both variables to false so code aborts in whichever order happens to be reached first
             enabled = false;
             selected = false;
             PassiveMode();
@@ -41,7 +43,10 @@ namespace esp_sio_dev
 
         void IRAM_ATTR InitPins()
         {
+            gpio_config_t io_conf;
+
             // To-do: Change over to REG_WRITE ?
+            // Speed not really a concern here, but inconsistent usage of GPIO is
             int allpins[] = {kACK_Pin, kCLK_Pin, kSEL_Pin, kMOSI_Pin, kMISO_Pin};
 
             for (int i = 0; i < 5; i++)
@@ -53,18 +58,11 @@ namespace esp_sio_dev
                 io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
                 gpio_config(&io_conf);
             }
-
-            // Clock mirror signal, debug only
-            /*io_conf.intr_type = GPIO_INTR_DISABLE;
-            io_conf.pin_bit_mask = 1ULL << kCLKMIRROR_Pin;
-            io_conf.mode = GPIO_MODE_OUTPUT;
-            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-            gpio_config(&io_conf);*/
         }
 
         void IRAM_ATTR PassiveMode()
         {
+            // Disable MISO and ACK pins
             REG_WRITE(GPIO_ENABLE1_W1TC_REG, (kMISO_Bitmask | kACK_Bitmask));
         }
 
@@ -73,7 +71,8 @@ namespace esp_sio_dev
             // Stall core0 to prevent interruptions
             core0_stall_start();
 
-            uint8_t lastByte = 0xFF;
+            // Storage for outgoing byte, start hi-Z
+            uint8_t last_byte = 0xFF;
 
             // Interrupt triggered on falling edge, assume we're going in hot
             selected = true;
@@ -81,13 +80,17 @@ namespace esp_sio_dev
             // Do SPI loop
             while (selected)
             {
-                SPDR = SPI_Transceive(lastByte);
+                // Send a byte, receive a byte
+                SPDR = Transceive(last_byte);
                 if (!selected)
                 {
+                    // Transceive function detected select signal HIGH, abort
                     break;
                 }
-                esp_sio_dev::sio::ProcessEvents();
-                lastByte = SPDR;
+                esp_sio_dev::sio::ProcessEvents(); // Received byte is processed by state machine
+                // SPDR is accessed directly by previous function, relic of AVR approach.
+                // To-do: ? Change to last_byte = esp_sio_dev::sio::ProcessEvents();
+                last_byte = SPDR;
             }
 
             // Clear last command
@@ -98,6 +101,8 @@ namespace esp_sio_dev
 
             // Quietly listen on SPI
             PassiveMode();
+
+            // Re-Enable SPI if previously set to Disable(ignore mode)
             Enable();
 
             // Clear interrupt status
@@ -113,7 +118,9 @@ namespace esp_sio_dev
         // bother us with interrupts on that core.
         // sickle the man!
         void InstallInterrupt()
-        {
+        { 
+            gpio_config_t io_conf;
+
             io_conf.intr_type = GPIO_INTR_NEGEDGE;
             io_conf.pin_bit_mask = 1ULL << kSEL_Pin;
             io_conf.mode = GPIO_MODE_INPUT;

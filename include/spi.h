@@ -27,22 +27,24 @@ namespace esp_sio_dev
         void InstallInterrupt();
 
         // Inlined for speed
-        inline uint8_t IRAM_ATTR SPI_Transceive(uint8_t data_out)
+        inline uint8_t IRAM_ATTR Transceive(uint8_t data_out)
         {
+            // Bit hacky, but, if disabled, abort up the chain
+            if(!enabled)
+            {
+                selected = false;
+                return 0xFF;
+            }
             uint8_t data_in = 0x00;
 
             for (int bitPos = 0; bitPos < 8; bitPos++)
             {
-                // Mirror clock signal, high - debugging only
-                //REG_WRITE(GPIO_OUT_W1TS_REG, 1 << (kCLKMIRROR_Pin));
-
                 // Wait for clock to go low
                 while (((GPIO_REG_READ(GPIO_IN1_REG) >> (kCLK_Pin - 32)) & 1U) == 1)
                 {
                     // Abort if unselected
                     if (((GPIO_REG_READ(GPIO_IN1_REG) >> (kSEL_Pin - 32)) & 1U) == 1)
                     {
-                        //ets_printf("SPI_Transceive bail 1\n");
                         selected = false;
                         return 0xFF;
                     }
@@ -51,7 +53,6 @@ namespace esp_sio_dev
                 // Abort if unselected
                 if (((GPIO_REG_READ(GPIO_IN1_REG) >> (kSEL_Pin - 32)) & 1U) == 1)
                 {
-                    //ets_printf("SPI_Transceive bail 2\n");
                     selected = false;
                     return 0xFF;
                 }
@@ -68,23 +69,16 @@ namespace esp_sio_dev
                     REG_WRITE(GPIO_OUT1_W1TC_REG, kMISO_Bitmask);
                 }
 
-                // Mirror clock signal, low - debugging only
-                //REG_WRITE(GPIO_OUT_W1TC_REG, 1 << (kCLKMIRROR_Pin));
-
                 // Wait for clock to go high
                 while (((GPIO_REG_READ(GPIO_IN1_REG) >> (kCLK_Pin - 32)) & 1U) == 0)
                 {
                     // Abort if unselected
                     if (((GPIO_REG_READ(GPIO_IN1_REG) >> (kSEL_Pin - 32)) & 1U) == 1)
                     {
-                        //ets_printf("SPI_Transceive bail 3\n");
                         selected = false;
                         return 0xFF;
                     }
                 }
-
-                // Mirror clock signal, high - debugging only
-                //REG_WRITE(GPIO_OUT_W1TS_REG, 1 << (kCLKMIRROR_Pin));
 
                 // Store current bit state
                 data_in |= ((GPIO_REG_READ(GPIO_IN1_REG) >> (kMOSI_Pin - 32)) & 1U) << bitPos;

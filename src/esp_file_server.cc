@@ -43,7 +43,7 @@ namespace esp_sio_dev
 {
     namespace file_server
     {
-
+        // To-do: Centralize these to the top-level namespace
         volatile bool net_interface_ready = false;
         volatile bool sd_filesystem_ready = false;
 

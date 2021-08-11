@@ -77,7 +77,10 @@ namespace esp_sio_dev
     
     // Make sure MC stays inactive long enough for BIOS to detect change
     // To-do: Adjust lower and test
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    // Bios takes roughly 1051ms between MC status polls.
+    // Can probably get away with less, but go a bit longer.
+    // We need to miss at least one status check to initiate a proper refresh in bios.
+    vTaskDelay(1337 / portTICK_PERIOD_MS);
     sio::memory_card_enabled = old_mc_status;
   }
 

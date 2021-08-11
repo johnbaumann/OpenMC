@@ -69,8 +69,11 @@ namespace esp_sio_dev
         SetupInterrupts(); // Create a task to install our interrupt handler on Core 1, ESP32 likes Core 0 for WiFi
         start_app_cpu();
 
-        //xTaskCreatePinnedToCore(wifi_ap::Task_StartWifiAP, "wifi_ap_task_core_0", 1024 * 40, NULL, 0, NULL, WIFI_TASK_CORE);
-        xTaskCreatePinnedToCore(wifi_client::Task_StartWifiClient, "wifi_client_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
+        // Really need to add wifi config from SD card. Tired of togglings this
+        // Wifi client mode is so much more satisfying.
+
+        xTaskCreatePinnedToCore(wifi_ap::Task_StartWifiAP, "wifi_ap_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
+        //xTaskCreatePinnedToCore(wifi_client::Task_StartWifiClient, "wifi_client_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
         
         printf("Free Heap = %i\n", esp_get_free_heap_size());
 
