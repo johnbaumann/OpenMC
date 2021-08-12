@@ -28,10 +28,10 @@
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 
 // Pin mapping
-const gpio_num_t kSDPin_MISO = GPIO_NUM_14; // Orange
-const gpio_num_t kSDPin_MOSI = GPIO_NUM_4;  // Blue
-const gpio_num_t kSDPin_CLK = GPIO_NUM_2;   // Yellow
-const gpio_num_t kSDPin_CS = GPIO_NUM_13;   // Green
+const gpio_num_t kSDPin_CS = GPIO_NUM_21;   // Green
+const gpio_num_t kSDPin_MOSI = GPIO_NUM_22; // Blue
+const gpio_num_t kSDPin_CLK = GPIO_NUM_19;  // Yellow
+const gpio_num_t kSDPin_MISO = GPIO_NUM_23; // Orange
 
 #define SPI_DMA_CHAN (spi_dma_chan_t)1
 

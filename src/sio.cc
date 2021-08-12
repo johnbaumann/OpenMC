@@ -120,7 +120,7 @@ namespace esp_sio_dev
                 spi::SPDR = data_out;
                 if (spi::enabled && current_command != PS1_SIOCommands::Ignore )
                 {
-                    if (SendAck() == false) // SendAck returns false if ack not sent, i.e. slave no longer selected
+                    if (spi::SendAck() == false) // SendAck returns false if ack not sent, i.e. slave no longer selected
                     {
                         spi::selected = false;
                     }

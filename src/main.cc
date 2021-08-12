@@ -24,6 +24,8 @@
 #define WIFI_TASK_CORE 0
 #define SIO_TASK_CORE 1
 
+#define MAX_TIMEOUT_SECONDS 10
+
 // Refs
 // https://psx-spx.consoledev.net/
 // https://github.com/nkolban/esp32-snippets/blob/master/gpio/interrupts/test_intr.c
@@ -55,7 +57,8 @@ namespace esp_sio_dev
     }
 
     void main(void)
-    {        
+    {
+        uint8_t timeout_seconds = 0;
         sio::memory_card_enabled = true;
         sio::pad_enabled = false;
         sio::net_yaroze_enabled = false;
@@ -64,27 +67,22 @@ namespace esp_sio_dev
 
         core0_stall_init();
         sio::Init();       // Init the SIO state machine to a default state.
-        spi::InitPins();   // Setup the pins for SPI
+        spi::InitPins();   // Setup the pins for bitbanged SPI
         spi::Enable();     // Enable SPI
         SetupInterrupts(); // Create a task to install our interrupt handler on Core 1, ESP32 likes Core 0 for WiFi
         start_app_cpu();
 
-        // Really need to add wifi config from SD card. Tired of togglings this
-        // Wifi client mode is so much more satisfying.
+        //xTaskCreatePinnedToCore(wifi_ap::Task_StartWifiAP, "wifi_ap_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
+        xTaskCreatePinnedToCore(wifi_client::Task_StartWifiClient, "wifi_client_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
 
-        xTaskCreatePinnedToCore(wifi_ap::Task_StartWifiAP, "wifi_ap_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
-        //xTaskCreatePinnedToCore(wifi_client::Task_StartWifiClient, "wifi_client_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
-        
-        printf("Free Heap = %i\n", esp_get_free_heap_size());
-
-        while(file_server::net_interface_ready == false && file_server::sd_filesystem_ready == false)
+        while (file_server::net_interface_ready == false && file_server::sd_filesystem_ready == false)
         {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
-        xTaskCreatePinnedToCore(file_server::Task_StartFileServer, "file_server_task_core_0", 1024*3, NULL, 0, NULL, WIFI_TASK_CORE);
+        
+        xTaskCreatePinnedToCore(file_server::Task_StartFileServer, "file_server_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
 
         printf("Free Heap = %i\n", esp_get_free_heap_size());
-
     }
 }
 
