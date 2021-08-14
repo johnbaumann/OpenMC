@@ -28,7 +28,6 @@
 #include <esp_http_server.h>
 
 /* Max length a file path can have on storage */
-//#define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 #define FILE_PATH_MAX CONFIG_FATFS_MAX_LFN
 
 /* Max size of an individual file. Make sure this
@@ -660,7 +659,9 @@ namespace esp_sio_dev
         void Task_StartFileServer(void *params)
         {
             //ESP_ERROR_CHECK(init_spiffs());
+            ESP_LOGI(TAG, "File server setup task on core %i\n", xPortGetCoreID());
             ESP_ERROR_CHECK(start_file_server("/sdcard"));
+            ESP_LOGI(TAG, "KILLING file server setup task on core %i\n", xPortGetCoreID());
             //printf("StartFileServer Task free words = %i\n", uxTaskGetStackHighWaterMark(NULL));
             vTaskDelete(NULL); // NULL means "this task"
         }

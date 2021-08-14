@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-
+// Notice: This file modified for use in this project, esp-sio-dev
 
 #include <soc/dport_reg.h>
 #include <soc/cpu.h>
@@ -59,7 +59,6 @@ static volatile uint8_t app_cpu_initial_start;
 SOC_RESERVE_MEMORY_REGION(0x3ffe3f20, 0x3ffe4350, rom_app_data);
 #endif
 
-
 // APP CPU cache is part of the main memory pool and we can't get the caches to work easily anyway because cache loads need to be synchronized.
 // So for now the app core can only execute from IRAM (and internal ROM).
 // Also, the APP CPU CANNOT load data from the flash!
@@ -69,7 +68,8 @@ static void IRAM_ATTR app_cpu_main()
     xt_int_enable_mask(1 << 19);
 
     //npiso_task(NULL);
-    while (1) {
+    while (1)
+    {
 #ifdef APP_CPU_RESERVE_ROM_DATA
         //ets_printf(hello_world); // Do not specify a "Hello World" here, as this would be stored in the flash!
 #endif
@@ -80,23 +80,23 @@ static void IRAM_ATTR app_cpu_main()
 // The main MUST NOT be inlined!
 // Otherwise, it will cause mayhem on the stack since we are modifying the stack pointer before the main is called.
 // Having a volatile pointer around should force the compiler to behave.
-static void (* volatile app_cpu_main_ptr)() = &app_cpu_main;
+static void (*volatile app_cpu_main_ptr)() = &app_cpu_main;
 
 static inline void cpu_write_dtlb(uint32_t vpn, unsigned attr)
 {
-    asm volatile ("wdtlb  %1, %0; dsync\n" :: "r" (vpn), "r" (attr));
+    asm volatile("wdtlb  %1, %0; dsync\n" ::"r"(vpn), "r"(attr));
 }
-
 
 static inline void cpu_write_itlb(unsigned vpn, unsigned attr)
 {
-    asm volatile ("witlb  %1, %0; isync\n" :: "r" (vpn), "r" (attr));
+    asm volatile("witlb  %1, %0; isync\n" ::"r"(vpn), "r"(attr));
 }
 
 static inline void cpu_configure_region_protection()
 {
     const uint32_t pages_to_protect[] = {0x00000000, 0x80000000, 0xa0000000, 0xc0000000, 0xe0000000};
-    for (int i = 0; i < sizeof(pages_to_protect)/sizeof(pages_to_protect[0]); ++i) {
+    for (int i = 0; i < sizeof(pages_to_protect) / sizeof(pages_to_protect[0]); ++i)
+    {
         cpu_write_dtlb(pages_to_protect[i], 0xf);
         cpu_write_itlb(pages_to_protect[i], 0xf);
     }
@@ -126,33 +126,30 @@ static void IRAM_ATTR app_cpu_init()
 #endif
 
     app_cpu_initial_start = 1;
-    while(1)
+    while (1)
     {
         // This will halt the CPU until it is needed
         DPORT_REG_CLR_BIT(DPORT_APPCPU_CTRL_B_REG, DPORT_APPCPU_CLKGATE_EN);
 
         // clock cpu will still execute 1 instruction after the clock gate is turned off.
         // so just have some NOPs here, so the stack pointer will be correct
-        asm volatile (                      \
-            "nop\n"                         \
-            "nop\n"                         \
-            "nop\n"                         \
-            "nop\n"                         \
-            "nop\n"                         \
-        );
+        asm volatile(
+            "nop\n"
+            "nop\n"
+            "nop\n"
+            "nop\n"
+            "nop\n");
 
         // load the new stack pointer for our main
         // this is VERY important, since the initial stack pointer now points somewhere in the heap!
-        asm volatile (                      \
-            "l32i a1, %0, 0\n"              \
-            ::"r"(&app_cpu_stack_ptr));
+        asm volatile(
+            "l32i a1, %0, 0\n" ::"r"(&app_cpu_stack_ptr));
 
         // Finally call the main.
         // Its imperative for the main to be NOT INLINED!
         app_cpu_main();
     }
 }
-
 
 bool start_app_cpu()
 {
@@ -194,7 +191,6 @@ bool start_app_cpu()
     return true;
 }
 
-
 /*
  * Initializes the app cpu. Somehow the APP cpu will wreak havoc on the heap when it starts.
  * Even if I give it a trivial infinite loop, it will still cause memory corruption.
@@ -229,6 +225,7 @@ void init_app_cpu_baremetal()
     DPORT_SET_PERI_REG_MASK(DPORT_APPCPU_CTRL_B_REG, DPORT_APPCPU_CLKGATE_EN);
 
     // finally wait for the CPU to start
-    while(!app_cpu_initial_start){}
+    while (!app_cpu_initial_start)
+    {
+    }
 }
-

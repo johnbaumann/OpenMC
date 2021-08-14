@@ -1,6 +1,6 @@
 #include "sio.h"
 
-#include "hardware.h"
+#include "pins.h"
 #include "sio_controller.h"
 #include "sio_memory_card.h"
 #include "sio_net_yaroze.h"

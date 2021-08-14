@@ -1,16 +1,17 @@
 #ifndef _SPI_H
 #define _SPI_H
 
-#include "hardware.h"
+#include "pins.h"
 
 #include <stdint.h>
 #include <driver/gpio.h>
 #include <esp32/rom/ets_sys.h>
 
+// Macro borrowed from Arduino wiring.h
 #define lowByte(w) ((uint8_t)((w)&0xff))
 #define highByte(w) ((uint8_t)((w) >> 8))
 
-#define MAX_TIMEOUT_TICKS 0xFFFF // No idea how long
+#define MAX_TIMEOUT_TICKS 0xFFFF // No idea how long this is, need to time/adjust
 
 namespace esp_sio_dev
 {

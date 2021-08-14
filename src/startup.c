@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Notice: This file modified for use in this project, esp-sio-dev
+
 #include <stdint.h>
 #include <string.h>
 

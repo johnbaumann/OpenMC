@@ -41,6 +41,7 @@ namespace esp_sio_dev
         {
             ESP_LOGI(TAG, "Wifi client setup task on core %i\n", xPortGetCoreID());
             wifi_init_sta();
+            ESP_LOGI(TAG, "KILLING Wifi client setup task on core %i\n", xPortGetCoreID());
             vTaskDelete(NULL); // NULL means "this task"
         }
 
@@ -147,15 +148,15 @@ namespace esp_sio_dev
      * happened. */
             if (bits & WIFI_CONNECTED_BIT)
             {
-                ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
-                         EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+                ESP_LOGI(TAG, "connected to ap SSID:%s",
+                         EXAMPLE_ESP_WIFI_SSID);
 
                 file_server::net_interface_ready = true;
             }
             else if (bits & WIFI_FAIL_BIT)
             {
-                ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
-                         EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+                ESP_LOGI(TAG, "Failed to connect to SSID:%s",
+                         EXAMPLE_ESP_WIFI_SSID);
             }
             else
             {

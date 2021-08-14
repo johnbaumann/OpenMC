@@ -1,18 +1,9 @@
-/* SD card and FAT filesystem example.
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
-// This example uses SPI peripheral to communicate with SD card.
-
 #include "esp_sdcard.h"
 
 #include "esp_file_helper.h"
 #include "esp_file_server.h"
 #include "esp_logging.h"
+#include "pins.h"
 #include "sio.h"
 #include "sio_memory_card.h"
 
@@ -25,19 +16,12 @@
 #include <sdmmc_cmd.h>
 
 #define MOUNT_POINT "/sdcard"
-#define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
-
-// Pin mapping
-const gpio_num_t kSDPin_CS = GPIO_NUM_21;   // Green
-const gpio_num_t kSDPin_MOSI = GPIO_NUM_22; // Blue
-const gpio_num_t kSDPin_CLK = GPIO_NUM_19;  // Yellow
-const gpio_num_t kSDPin_MISO = GPIO_NUM_23; // Orange
+#define FILE_PATH_MAX CONFIG_FATFS_MAX_LFN
 
 #define SPI_DMA_CHAN (spi_dma_chan_t)1
 
 namespace esp_sio_dev
 {
-
     FILE *sdcard_file;
     const char mount_point[] = MOUNT_POINT;
     sdmmc_card_t *card;

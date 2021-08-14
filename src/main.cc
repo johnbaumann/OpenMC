@@ -4,7 +4,7 @@
 #include "esp_logging.h"
 #include "esp_wifi_ap.h"
 #include "esp_wifi_client.h"
-#include "hardware.h"
+#include "pins.h"
 #include "sio.h"
 #include "sio_memory_card.h"
 #include "spi.h"
@@ -79,10 +79,10 @@ namespace esp_sio_dev
         {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
-        
+
         xTaskCreatePinnedToCore(file_server::Task_StartFileServer, "file_server_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
 
-        printf("Free Heap = %i\n", esp_get_free_heap_size());
+        //printf("Free Heap = %i\n", esp_get_free_heap_size());
     }
 }
 
