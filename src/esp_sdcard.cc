@@ -25,11 +25,25 @@ namespace esp_sio_dev
     FILE *sdcard_file;
     const char mount_point[] = MOUNT_POINT;
     sdmmc_card_t *card;
-    sdmmc_host_t host = SDSPI_HOST_DEFAULT(); // Macro, not actually a function call
+    sdmmc_host_t host = {
+        .flags = SDMMC_HOST_FLAG_SPI | SDMMC_HOST_FLAG_DEINIT_ARG,
+        .slot = VSPI_HOST,
+        .max_freq_khz = SDMMC_FREQ_DEFAULT,
+        .io_voltage = 3.3f,
+        .init = &sdspi_host_init,
+        .set_bus_width = NULL,
+        .get_bus_width = NULL,
+        .set_bus_ddr_mode = NULL,
+        .set_card_clk = &sdspi_host_set_card_clk,
+        .do_transaction = &sdspi_host_do_transaction,
+        .deinit_p = &sdspi_host_remove_device,
+        .io_int_enable = &sdspi_host_io_int_enable,
+        .io_int_wait = &sdspi_host_io_int_wait,
+        .command_timeout_ms = 0,
+    };
 
     void mount_sdcard(void)
     {
-        ESP_LOGI(kLogPrefix, "sdcard entry point on core %i\n", xPortGetCoreID());
         esp_err_t ret;
 
         // Options for mounting the filesystem.
@@ -37,6 +51,9 @@ namespace esp_sio_dev
             .format_if_mount_failed = false,
             .max_files = 5,
             .allocation_unit_size = 16 * 1024};
+
+        host.slot = VSPI_HOST;
+
         ESP_LOGI(kLogPrefix, "Initializing SD card");
 
         // Use settings defined above to initialize SD card and mount FAT filesystem.
@@ -63,9 +80,13 @@ namespace esp_sio_dev
 
         // This initializes the slot without card detect (CD) and write protect (WP) signals.
         // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
-        sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-        slot_config.gpio_cs = kSDPin_CS;
-        slot_config.host_id = (spi_host_device_t)host.slot;
+        sdspi_device_config_t slot_config = {
+            .host_id = (spi_host_device_t)host.slot,
+            .gpio_cs = kSDPin_CS,
+            .gpio_cd = SDSPI_SLOT_NO_CD,
+            .gpio_wp = SDSPI_SLOT_NO_WP,
+            .gpio_int = GPIO_NUM_NC,
+        };
 
         ret = esp_vfs_fat_sdspi_mount(mount_point, &host, &slot_config, &mount_config, &card);
 

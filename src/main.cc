@@ -4,6 +4,7 @@
 #include "esp_logging.h"
 #include "esp_wifi_ap.h"
 #include "esp_wifi_client.h"
+#include "oled.h"
 #include "pins.h"
 #include "sio.h"
 #include "sio_memory_card.h"
@@ -26,13 +27,6 @@
 
 #define MAX_TIMEOUT_SECONDS 10
 
-// Refs
-// https://psx-spx.consoledev.net/
-// https://github.com/nkolban/esp32-snippets/blob/master/gpio/interrupts/test_intr.c
-// https://esp32.com/viewtopic.php?t=13432
-// https://github.com/nkolban/esp32-snippets/blob/master/gpio/interrupts/test_intr.c
-// not using pins >= 34 as pull ups
-// https://www.esp32.com/viewtopic.php?t=1183
 // rama
 // sickle <3
 // Nicolas Noble
@@ -63,6 +57,8 @@ namespace esp_sio_dev
         sio::pad_enabled = false;
         sio::net_yaroze_enabled = false;
 
+        init_oled();
+
         xTaskCreatePinnedToCore(Task_MountSDCard, "sd_card_task_core_0", 1024 * 3, NULL, 0, NULL, SD_TASK_CORE);
 
         core0_stall_init();
@@ -82,7 +78,7 @@ namespace esp_sio_dev
 
         xTaskCreatePinnedToCore(file_server::Task_StartFileServer, "file_server_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
 
-        //printf("Free Heap = %i\n", esp_get_free_heap_size());
+        printf("Free Heap = %i\n", esp_get_free_heap_size());
     }
 }
 

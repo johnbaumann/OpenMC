@@ -16,10 +16,10 @@ const gpio_num_t kOLEDPin_RST = GPIO_NUM_16; // Reset
 // OLED
 
 // SD Card
-const gpio_num_t kSDPin_CS = GPIO_NUM_21;   // Chip Select - IN
-const gpio_num_t kSDPin_MOSI = GPIO_NUM_22; // Master Out Slave In - IN
-const gpio_num_t kSDPin_CLK = GPIO_NUM_19;  // Clock - OUT
-const gpio_num_t kSDPin_MISO = GPIO_NUM_23; // Master In Slave Out - IN
+const gpio_num_t kSDPin_CS = GPIO_NUM_5;   // Chip Select - IN
+const gpio_num_t kSDPin_CLK = GPIO_NUM_18;  // Clock - OUT
+const gpio_num_t kSDPin_MISO = GPIO_NUM_19; // Master In Slave Out - IN
+const gpio_num_t kSDPin_MOSI = GPIO_NUM_23; // Master Out Slave In - OUT
 // SD Card
 
 // Playstation
