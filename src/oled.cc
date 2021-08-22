@@ -26,8 +26,8 @@ void i2c_master_init()
 		.scl_io_num = kOLEDPin_SCL,
 		.sda_pullup_en = GPIO_PULLUP_ENABLE,
 		.scl_pullup_en = GPIO_PULLUP_ENABLE,
-		.master = {.clk_speed = 700000}
-        };
+		.master = {.clk_speed = 700000},
+		.clk_flags = I2C_SCLK_SRC_FLAG_FOR_NOMAL};
 	i2c_param_config(I2C_NUM_1, &i2c_config);
 	i2c_driver_install(I2C_NUM_1, I2C_MODE_MASTER, 0, 0, 0);
 }
@@ -38,24 +38,51 @@ void ssd1306_init()
 
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
-	gpio_set_direction(kOLEDPin_RST,GPIO_MODE_OUTPUT);
+	gpio_set_direction(kOLEDPin_RST, GPIO_MODE_OUTPUT);
 	gpio_set_level(kOLEDPin_RST, 0);
-	vTaskDelay( pdMS_TO_TICKS( 100 ) );
+	vTaskDelay(pdMS_TO_TICKS(100));
 	gpio_set_level(kOLEDPin_RST, 1);
 
-	gpio_set_direction(kPin_LED,GPIO_MODE_OUTPUT);
+	gpio_set_direction(kPin_LED, GPIO_MODE_OUTPUT);
 	gpio_set_level(kPin_LED, 0);
 
 	i2c_master_start(cmd);
 	i2c_master_write_byte(cmd, (OLED_I2C_ADDRESS << 1) | I2C_MASTER_WRITE, true);
-	i2c_master_write_byte(cmd, OLED_CONTROL_BYTE_CMD_STREAM, true);
+	/*i2c_master_write_byte(cmd, OLED_CONTROL_BYTE_CMD_STREAM, true);
 
 	i2c_master_write_byte(cmd, OLED_CMD_SET_CHARGE_PUMP, true);
 	i2c_master_write_byte(cmd, 0x14, true);
 
 	i2c_master_write_byte(cmd, OLED_CMD_SET_SEGMENT_REMAP, true); // reverse left-right mapping
-	i2c_master_write_byte(cmd, OLED_CMD_SET_COM_SCAN_MODE, true); // reverse up-bottom mapping
+	i2c_master_write_byte(cmd, OLED_CMD_SET_COM_SCAN_MODE, true); // reverse up-bottom mapping*/
 
+	i2c_master_write_byte(cmd, OLED_CONTROL_BYTE_CMD_STREAM, true);
+	i2c_master_write_byte(cmd, OLED_CMD_DISPLAY_OFF, true);
+	i2c_master_write_byte(cmd, OLED_CMD_SET_DISPLAY_CLK_DIV, true);
+	i2c_master_write_byte(cmd, 0xF0, true);
+	i2c_master_write_byte(cmd, OLED_CMD_SET_MUX_RATIO, true);
+	i2c_master_write_byte(cmd, 64 - 1, true);
+	i2c_master_write_byte(cmd, OLED_CMD_SET_DISPLAY_OFFSET, true);
+	i2c_master_write_byte(cmd, 0, true);
+	i2c_master_write_byte(cmd, OLED_CONTROL_BYTE_DATA_STREAM, true);
+	i2c_master_write_byte(cmd, OLED_CMD_SET_CHARGE_PUMP, true);
+	i2c_master_write_byte(cmd, 0x14, true);
+	i2c_master_write_byte(cmd, OLED_CMD_SET_MEMORY_ADDR_MODE, true);
+	i2c_master_write_byte(cmd, 0x00, true);
+	i2c_master_write_byte(cmd, OLED_CMD_SET_SEGMENT_REMAP, true);
+	i2c_master_write_byte(cmd, OLED_CMD_SET_COM_SCAN_MODE, true);
+	i2c_master_write_byte(cmd, OLED_CMD_SET_COM_PIN_MAP, true);
+	i2c_master_write_byte(cmd, 0x12, true);
+	i2c_master_write_byte(cmd, OLED_CMD_SET_CONTRAST, true);
+	i2c_master_write_byte(cmd, 0xCF, true);
+	i2c_master_write_byte(cmd, OLED_CMD_SET_PRECHARGE, true);
+	i2c_master_write_byte(cmd, 0xF1, true);
+	i2c_master_write_byte(cmd, OLED_CMD_SET_VCOMH_DESELCT, true);
+	i2c_master_write_byte(cmd, 0x40, true);
+	i2c_master_write_byte(cmd, OLED_CMD_DISPLAY_RAM, true);
+	i2c_master_write_byte(cmd, OLED_CMD_DISPLAY_NORMAL, true);
+	i2c_master_write_byte(cmd, 0x2E, true);
+	//i2c_master_write_byte(cmd, , true);
 	i2c_master_write_byte(cmd, OLED_CMD_DISPLAY_ON, true);
 	i2c_master_stop(cmd);
 
@@ -99,7 +126,6 @@ void task_ssd1306_display_clear(void *ignore)
 {
 	i2c_cmd_handle_t cmd;
 
-	uint8_t zero[128];
 	for (uint8_t i = 0; i < 8; i++)
 	{
 		cmd = i2c_cmd_link_create();
@@ -107,9 +133,11 @@ void task_ssd1306_display_clear(void *ignore)
 		i2c_master_write_byte(cmd, (OLED_I2C_ADDRESS << 1) | I2C_MASTER_WRITE, true);
 		i2c_master_write_byte(cmd, OLED_CONTROL_BYTE_CMD_SINGLE, true);
 		i2c_master_write_byte(cmd, 0xB0 | i, true);
-
 		i2c_master_write_byte(cmd, OLED_CONTROL_BYTE_DATA_STREAM, true);
-		i2c_master_write(cmd, zero, 128, true);
+		for (uint8_t j = 0; j < 128; j++)
+		{
+			i2c_master_write_byte(cmd, 0, true);
+		}
 		i2c_master_stop(cmd);
 		i2c_master_cmd_begin(I2C_NUM_1, cmd, 10 / portTICK_PERIOD_MS);
 		i2c_cmd_link_delete(cmd);
@@ -189,7 +217,7 @@ void task_ssd1306_scroll(void *ignore)
 	vTaskDelete(NULL);
 }
 
-void task_ssd1306_display_text(const void *arg_text)
+void task_ssd1306_display_text(void *arg_text)
 {
 	char *text = (char *)arg_text;
 	uint8_t text_len = strlen(text);
@@ -259,8 +287,7 @@ void init_oled(void)
 	//xTaskCreate(&task_ssd1306_display_pattern, "ssd1306_display_pattern",  2048, NULL, 6, NULL);
 	xTaskCreatePinnedToCore(&task_ssd1306_display_clear, "ssd1306_display_clear", 2048, NULL, 0, NULL, 0);
 	vTaskDelay(100 / portTICK_PERIOD_MS);
-	xTaskCreatePinnedToCore(&task_ssd1306_display_text, "ssd1306_display_text", 2048,
-				(void *)"Hello world!\nMulitine is OK!\nAnother line", 0, NULL, 0);
+	xTaskCreatePinnedToCore(&task_ssd1306_display_text, "ssd1306_display_text", 2048, (void *)"Hello world!\nMulitine is OK!\nAnother line\0", 0, NULL, 0);
 	//xTaskCreatePinnedToCore(&task_ssd1306_contrast, "ssid1306_contrast", 2048, NULL, 0, NULL, 0);
-    xTaskCreatePinnedToCore(&task_ssd1306_scroll, "ssid1306_scroll", 2048, NULL, 0, NULL, 0);
+	//xTaskCreatePinnedToCore(&task_ssd1306_scroll, "ssid1306_scroll", 2048, NULL, 0, NULL, 0);
 }

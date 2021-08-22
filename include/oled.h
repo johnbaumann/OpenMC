@@ -1,13 +1,6 @@
 #ifndef OLED_H_
 #define OLED_H_
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-    void init_oled(void);
-#ifdef __cplusplus
-}
-#endif
+void init_oled(void);
 
 #endif // OLED_H_
