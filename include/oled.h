@@ -1,6 +1,12 @@
 #ifndef OLED_H_
 #define OLED_H_
 
-void init_oled(void);
+namespace esp_sio_dev
+{
+    namespace oled
+    {
+        void init_oled(void);
+    } // oled
+} // esp_sio_dev
 
 #endif // OLED_H_

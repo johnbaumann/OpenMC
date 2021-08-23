@@ -18,6 +18,8 @@ namespace esp_sio_dev
         bool DRAM_ATTR pad_enabled = false;
         bool DRAM_ATTR net_yaroze_enabled = false;
 
+        uint64_t DRAM_ATTR event_counter;
+
         void IRAM_ATTR GoIdle()
         {
             // Reset emulated device commands/variables
@@ -28,6 +30,8 @@ namespace esp_sio_dev
 
         void IRAM_ATTR Init()
         {
+            event_counter = 0;
+            memory_card::last_write_tick = 0;
             GoIdle();
         }
 
@@ -36,7 +40,6 @@ namespace esp_sio_dev
             uint8_t data_in = 0x00;
             uint8_t data_out = 0xFF;
 
-            
             // If ignore, do nothing
             if (current_command == PS1_SIOCommands::Ignore)
             {
@@ -44,7 +47,7 @@ namespace esp_sio_dev
             }
             else // Enter SIO Loop
             {
-                
+
                 // Nothing done yet, prepare for SIO/SPI
                 if (current_command == PS1_SIOCommands::Idle)
                 {
@@ -61,7 +64,9 @@ namespace esp_sio_dev
 
                 // Waiting for command, store incoming byte as command
                 if (current_command == PS1_SIOCommands::Wait)
+                {
                     current_command = data_in;
+                }
 
                 // Interpret incoming command
                 switch (current_command)
@@ -109,16 +114,15 @@ namespace esp_sio_dev
                     break;
 
                 default: // Bad/Unexpected/Unsupported slave select command
-                    //ets_printf("Unexpected SIO command %x\n", current_command);
                     current_command = PS1_SIOCommands::Ignore;
                     spi::Disable();
                     return;
                 }
-                
+
                 // Push outbound data to the SPI Data Register
                 // Data will be transferred in the next byte pair
                 spi::SPDR = data_out;
-                if (spi::enabled && current_command != PS1_SIOCommands::Ignore )
+                if (spi::enabled && current_command != PS1_SIOCommands::Ignore)
                 {
                     if (spi::SendAck() == false) // SendAck returns false if ack not sent, i.e. slave no longer selected
                     {
@@ -129,7 +133,16 @@ namespace esp_sio_dev
                 // If data is ready for card, store it.
                 // This takes a bit so this is done after SPDR + ACK
                 memory_card::Commit();
-                
+            }
+        }
+
+        void IRAM_ATTR TickEventCounter()
+        {
+            event_counter++;
+            // Roll-over detection
+            if (event_counter == 0)
+            {
+                memory_card::last_write_tick = 0;
             }
         }
     } // namespace sio

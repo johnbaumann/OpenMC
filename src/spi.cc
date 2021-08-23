@@ -87,17 +87,18 @@ namespace esp_sio_dev
                     // Transceive function detected select signal HIGH, abort
                     break;
                 }
-                esp_sio_dev::sio::ProcessEvents(); // Received byte is processed by state machine
+                sio::ProcessEvents(); // Received byte is processed by state machine
                 // SPDR is accessed directly by previous function, relic of AVR approach.
                 // To-do: ? Change to last_byte = esp_sio_dev::sio::ProcessEvents();
                 last_byte = SPDR;
             }
 
             // Clear last command
-            esp_sio_dev::sio::current_command = esp_sio_dev::sio::PS1_SIOCommands::Idle;
+            sio::current_command = esp_sio_dev::sio::PS1_SIOCommands::Idle;
+            sio::TickEventCounter();
 
             // Reset emulated device commands/variables
-            esp_sio_dev::sio::GoIdle();
+            sio::GoIdle();
 
             // Quietly listen on SPI
             PassiveMode();

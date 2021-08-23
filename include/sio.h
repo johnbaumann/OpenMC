@@ -19,6 +19,7 @@ namespace esp_sio_dev
         };
 
         extern uint8_t current_command;
+        extern uint64_t event_counter;
 
         extern bool memory_card_enabled;
         extern bool pad_enabled;
@@ -27,6 +28,7 @@ namespace esp_sio_dev
         void GoIdle();
         void Init();
         void ProcessEvents();
+        void TickEventCounter();
     } // namespace sio
 } // namespace esp_sio_dev
 

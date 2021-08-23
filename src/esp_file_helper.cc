@@ -9,25 +9,28 @@
 #include <freertos/task.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 namespace esp_sio_dev
 {
-  FILE *mc_file;
-  bool mc_sector_uncommitted[1024];
-  bool mc_hard_committed = true;
-  int rw_fail_count = 0;
+  char loaded_file_path[CONFIG_FATFS_MAX_LFN + 1];
 
-  param_mc_write myparam;
-
-  static void Task_HardCommit(void *params);
-
-  void Create_Write_Task(void *params)
+  void SD_Write_Task(void *params)
   {
-    xTaskCreatePinnedToCore(Task_HardCommit, "sd_write_task_core_0", 1024 * 10, params, 2, NULL, 0);
+    while (1)
+    {
+      if (sio::memory_card::committed_to_storage == false && sio::memory_card::last_write_tick + 50 <= sio::event_counter)
+      {
+        WriteFile();
+      }
+
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
   }
 
   void LoadCardFromFile(char *filepath, void *destination)
   {
+    FILE *mc_file;
     bool old_mc_status = sio::memory_card_enabled;
     sio::memory_card_enabled = false;
 
@@ -57,24 +60,25 @@ namespace esp_sio_dev
 
       rewind(mc_file);
 
-      if (file_size > (128 * 1024))
-        file_size = (128 * 1024);
+      if (file_size != (128 * 1024))
+      {
+        ESP_LOGE(kLogPrefix, "Invalid File size!\n");
+        fclose(mc_file);
+        sio::memory_card_enabled = old_mc_status;
+        return;
+      }
 
       fread(dest, 1, file_size, mc_file);
       fclose(mc_file);
 
-      if (file_size < 128 * 1024)
-      {
-        for (int i = file_size; i < (128 * 1024) - file_size; i++)
-        {
-          dest[i] = 0x00;
-        }
-      }
+      strlcpy(loaded_file_path, filepath, sizeof(loaded_file_path));
+
+      sio::memory_card::flag = sio::memory_card::Flags::kDirectoryUnread;
+      sio::memory_card::GoIdle();
+      sio::memory_card::last_write_tick = sio::event_counter;
+      sio::memory_card::committed_to_storage = true;
     }
 
-    sio::memory_card::flag = sio::memory_card::Flags::kDirectoryUnread;
-    sio::memory_card::GoIdle();
-    
     // Make sure MC stays inactive long enough for BIOS to detect change
     // To-do: Adjust lower and test
     // Bios takes roughly 1051ms between MC status polls.
@@ -84,39 +88,41 @@ namespace esp_sio_dev
     sio::memory_card_enabled = old_mc_status;
   }
 
-  static void Task_HardCommit(void *params)
+  int WriteFile()
   {
-    param_mc_write *myparam = (param_mc_write *)params;
-    WriteFrame(mc_file, myparam->dest_mc_ram, myparam->dest_sector);
-    vTaskDelete(NULL);
-  }
+    FILE *mc_file;
+    uint32_t write_end_time;
+    uint32_t write_start_time = esp_log_timestamp();
 
-  int WriteFrame(FILE *dest_file, void *mc_ram, uint16_t sector)
-  {
-    if (!dest_file)
+    ESP_LOGI(kLogPrefix, "WriteFile(%s)\n", loaded_file_path);
+    mc_file = fopen(loaded_file_path, "r+");
+
+    if (!mc_file)
     {
       ESP_LOGE(kLogPrefix, "Error opening file!\n");
       return -1;
     }
 
-    if (fseek(dest_file, sector * 128, SEEK_SET) != 0)
-    {
-      ESP_LOGE(kLogPrefix, "Error seeking file %i!\n", sector);
-      return -2;
-    }
-
-    if (fwrite(mc_ram, 1, 128, dest_file) != 128)
+    if (fwrite(sio::memory_card::memory_card_ram, 1, (128 * 1024), mc_file) != (128 * 1024))
     {
       ESP_LOGE(kLogPrefix, "Error writing file!\n");
       return -3;
     }
-
-    if (ferror(dest_file))
+    else if (ferror(mc_file))
     {
       ESP_LOGE(kLogPrefix, "Unknown error writing file!\n");
     }
+    else
+    {
+      ESP_LOGI(kLogPrefix, "File written!\n");
+    }
 
-    ESP_LOGI(kLogPrefix, "sector %i written\n", sector);
+    fclose(mc_file);
+
+    write_end_time = esp_log_timestamp();
+    sio::memory_card::committed_to_storage = true;
+
+    printf("Took %i ms to write file.\n", write_end_time - write_start_time);
 
     return 0;
   }

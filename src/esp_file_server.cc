@@ -32,7 +32,7 @@
 
 /* Max size of an individual file. Make sure this
  * value is same as that set in upload_script.html */
-#define MAX_FILE_SIZE (128 * 1024) // 200 KB
+#define MAX_FILE_SIZE (128 * 1024) // 128 KB
 #define MAX_FILE_SIZE_STR "128KB"
 
 /* Scratch buffer size */
@@ -49,7 +49,7 @@ namespace esp_sio_dev
         struct file_server_data
         {
             /* Base path of file storage */
-            char base_path[ESP_VFS_PATH_MAX + 1];
+            char base_path[FILE_PATH_MAX + 1];
 
             /* Scratch buffer for temporary storage during file transfer */
             char scratch[SCRATCH_BUFSIZE];

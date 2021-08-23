@@ -28,7 +28,9 @@ namespace esp_sio_dev
       static uint8_t DRAM_ATTR sector_offset;
       static uint8_t DRAM_ATTR checksum_in;
       static uint8_t DRAM_ATTR checksum_out;
-      static bool DRAM_ATTR uncommited_write = false;
+      static bool DRAM_ATTR uncommited_soft_write = false;
+      bool DRAM_ATTR committed_to_storage = true;
+      uint64_t DRAM_ATTR last_write_tick;
 
       static uint8_t DRAM_ATTR data_buffer[128];
 
@@ -37,7 +39,7 @@ namespace esp_sio_dev
 
       void IRAM_ATTR Commit()
       {
-        if (uncommited_write)
+        if (uncommited_soft_write)
         {
           // Write buffer to memory page
           for (int i = 0; i < 128; i++)
@@ -50,7 +52,9 @@ namespace esp_sio_dev
             flag = Flags::kDirectoryUnread;
 
           // Clear (soft)buffer status before return
-          uncommited_write = false;
+          uncommited_soft_write = false;
+          committed_to_storage = false;
+          last_write_tick = sio::event_counter;
         }
 
         return;
@@ -191,7 +195,6 @@ namespace esp_sio_dev
           //Confirm LSB
           data_out = (sector & 0xFF);
           checksum_out = highByte(sector) ^ lowByte(sector);
-          //ets_printf("Sector = 0x%04X\n", Sector);
           break;
 
           // Cases 8 through 135 overloaded to default operator below
@@ -292,7 +295,7 @@ namespace esp_sio_dev
             // If the incoming sector is within our storage, store it
             if (sector < 1024)
             {
-              uncommited_write = true;
+              uncommited_soft_write = true;
             }
           }
           else
