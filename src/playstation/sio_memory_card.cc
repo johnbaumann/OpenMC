@@ -1,9 +1,9 @@
 #include "sio_memory_card.h"
 
-#include "esp_file_helper.h"
+#include "storage/esp_file_helper.h"
 #include "esp_logging.h"
-#include "sio.h"
-#include "spi.h"
+#include "playstation/sio.h"
+#include "playstation/spi.h"
 
 #include <esp_log.h>
 #include <esp_attr.h>

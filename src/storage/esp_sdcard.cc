@@ -1,11 +1,11 @@
 #include "esp_sdcard.h"
 
-#include "esp_file_helper.h"
-#include "esp_file_server.h"
+#include "storage/esp_file_helper.h"
+#include "storage/esp_file_server.h"
 #include "esp_logging.h"
 #include "pins.h"
-#include "sio.h"
-#include "sio_memory_card.h"
+#include "playstation/sio.h"
+#include "playstation/sio_memory_card.h"
 
 #include <dirent.h>
 #include <esp_vfs.h>

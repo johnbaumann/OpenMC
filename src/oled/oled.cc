@@ -1,6 +1,6 @@
 #include "pins.h"
-#include "ssd1366.h"
-#include "font8x8_basic.h"
+#include "oled/ssd1366.h"
+#include "oled/font8x8_basic.h"
 
 #include <string.h>
 #include "driver/gpio.h"

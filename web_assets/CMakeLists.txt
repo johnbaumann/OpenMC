@@ -1,0 +1,1 @@
+idf_component_register(EMBED_FILES "favicon.ico" "upload_script.html")

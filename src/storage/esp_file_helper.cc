@@ -1,6 +1,6 @@
-#include "esp_file_helper.h"
-#include "sio.h"
-#include "sio_memory_card.h"
+#include "storage/esp_file_helper.h"
+#include "playstation/sio.h"
+#include "playstation/sio_memory_card.h"
 
 #include "esp_logging.h"
 

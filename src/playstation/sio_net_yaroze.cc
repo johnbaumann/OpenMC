@@ -1,7 +1,7 @@
 #include "sio_net_yaroze.h"
 
-#include "sio.h"
-#include "spi.h"
+#include "playstation/sio.h"
+#include "playstation/spi.h"
 
 uint8_t current_command;
 

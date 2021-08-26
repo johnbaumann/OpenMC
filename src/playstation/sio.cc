@@ -1,10 +1,10 @@
-#include "sio.h"
+#include "playstation/sio.h"
 
 #include "pins.h"
-#include "sio_controller.h"
-#include "sio_memory_card.h"
-#include "sio_net_yaroze.h"
-#include "spi.h"
+#include "playstation/sio_controller.h"
+#include "playstation/sio_memory_card.h"
+#include "playstation/sio_net_yaroze.h"
+#include "playstation/spi.h"
 
 #include <esp32/rom/ets_sys.h>
 

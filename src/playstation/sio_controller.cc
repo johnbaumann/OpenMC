@@ -1,7 +1,7 @@
 #include "sio_controller.h"
 
-#include "sio.h"
-#include "spi.h"
+#include "playstation/sio.h"
+#include "playstation/spi.h"
 
 namespace esp_sio_dev
 {

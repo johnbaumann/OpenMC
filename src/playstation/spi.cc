@@ -1,9 +1,9 @@
 #include "spi.h"
 
 #include "esp_logging.h"
-#include "sio.h"
+#include "playstation/sio.h"
 
-#include "core0_stall.h"
+#include "baremetal_core1/core0_stall.h"
 
 #include <stdint.h>
 #include <esp_system.h>

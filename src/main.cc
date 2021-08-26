@@ -1,16 +1,16 @@
-#include "esp_file_helper.h"
-#include "esp_file_server.h"
-#include "esp_sdcard.h"
+#include "storage/esp_file_helper.h"
+#include "storage/esp_file_server.h"
+#include "storage/esp_sdcard.h"
 #include "esp_logging.h"
-#include "esp_wifi_ap.h"
-#include "esp_wifi_client.h"
-#include "oled.h"
+#include "wifi/esp_wifi_ap.h"
+#include "wifi/esp_wifi_client.h"
+#include "oled/oled.h"
 #include "pins.h"
-#include "sio.h"
-#include "sio_memory_card.h"
-#include "spi.h"
+#include "playstation/sio.h"
+#include "playstation/sio_memory_card.h"
+#include "playstation/spi.h"
 
-#include "core0_stall.h"
+#include "baremetal_core1/core0_stall.h"
 
 #include <stdio.h>
 #include <freertos/FreeRTOS.h>
