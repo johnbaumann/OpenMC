@@ -5,7 +5,7 @@ namespace esp_sio_dev
 {
     namespace oled
     {
-        void init_oled(void);
+        void Init(void);
     } // oled
 } // esp_sio_dev
 

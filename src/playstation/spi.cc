@@ -1,6 +1,6 @@
 #include "spi.h"
 
-#include "esp_logging.h"
+#include "logging.h"
 #include "playstation/sio.h"
 
 #include "baremetal_core1/core0_stall.h"

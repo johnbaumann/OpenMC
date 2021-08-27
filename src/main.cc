@@ -1,14 +1,15 @@
-#include "storage/esp_file_helper.h"
-#include "storage/esp_file_server.h"
-#include "storage/esp_sdcard.h"
-#include "esp_logging.h"
-#include "wifi/esp_wifi_ap.h"
-#include "wifi/esp_wifi_client.h"
+#include "storage/file_helper.h"
+#include "web/file_server.h"
+#include "storage/sdcard.h"
+#include "logging.h"
+#include "wifi/access_point.h"
+#include "wifi/client.h"
 #include "oled/oled.h"
 #include "pins.h"
 #include "playstation/sio.h"
 #include "playstation/sio_memory_card.h"
 #include "playstation/spi.h"
+#include "storage/spiffs.h"
 
 #include "baremetal_core1/core0_stall.h"
 
@@ -196,33 +197,32 @@ namespace esp_sio_dev
         gpio_set_direction(kPin_LED, GPIO_MODE_OUTPUT);
         gpio_set_level(kPin_LED, 0);
 
-        oled::init_oled();
+        oled::Init();
 
         // Create a task to mount the SD Card
-        xTaskCreatePinnedToCore(Task_MountSDCard, "sd_card_task_core_0", 1024 * 3, NULL, 0, NULL, SD_TASK_CORE);
-        
-        // 
+        xTaskCreatePinnedToCore(storage::Task_MountSDCard, "sd_card_task_core_0", 1024 * 3, NULL, 0, NULL, SD_TASK_CORE);
+        //storage::init_spiffs();
+
         core0_stall_init();
 
         sio::Init();       // Init the SIO state machine to a default state.
         spi::InitPins();   // Setup the pins for bitbanged SPI
         spi::Enable();     // Enable SPI
         SetupInterrupts(); // Create a task to install our interrupt handler on Core 1, ESP32 likes Core 0 for WiFi
-        
-        //
+
         start_app_cpu();
 
-        xTaskCreatePinnedToCore(SD_Write_Task, "sd_write_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
+        xTaskCreatePinnedToCore(storage::SD_Write_Task, "sd_write_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
 
-        //xTaskCreatePinnedToCore(wifi_ap::Task_StartWifiAP, "wifi_ap_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
-        xTaskCreatePinnedToCore(wifi_client::Task_StartWifiClient, "wifi_client_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
+        //xTaskCreatePinnedToCore(wifi::access_point::Task_Start, "wifi_ap_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
+        xTaskCreatePinnedToCore(wifi::client::Task_Start, "wifi_client_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
 
-        while (file_server::net_interface_ready == false && file_server::sd_filesystem_ready == false)
+        while (web::file_server::net_interface_ready == false && web::file_server::sd_filesystem_ready == false)
         {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
 
-        xTaskCreatePinnedToCore(file_server::Task_StartFileServer, "file_server_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
+        xTaskCreatePinnedToCore(web::file_server::Task_StartFileServer, "file_server_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
 
         xTaskCreate(tcp_server_task, "tcp_server", 4096, (void *)AF_INET, 5, NULL);
 
