@@ -19,7 +19,7 @@ namespace esp_sio_dev
         };
 
         extern uint8_t current_command;
-        extern uint64_t event_counter;
+        extern uint64_t event_ticks;
 
         extern bool memory_card_enabled;
         extern bool pad_enabled;

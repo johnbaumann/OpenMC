@@ -212,7 +212,7 @@ namespace esp_sio_dev
 
         start_app_cpu();
 
-        xTaskCreatePinnedToCore(storage::SD_Write_Task, "sd_write_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
+        xTaskCreatePinnedToCore(storage::Task_Write, "write_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
 
         //xTaskCreatePinnedToCore(wifi::access_point::Task_Start, "wifi_ap_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);
         xTaskCreatePinnedToCore(wifi::client::Task_Start, "wifi_client_task_core_0", 1024 * 3, NULL, 0, NULL, WIFI_TASK_CORE);

@@ -60,7 +60,7 @@ namespace esp_sio_dev
 			i2c_cmd_link_delete(cmd);
 		}
 
-		void task_ssd1306_scroll(void *ignore)
+		void EnableScroll(void *ignore)
 		{
 			esp_err_t espRc;
 
@@ -97,7 +97,7 @@ namespace esp_sio_dev
 			i2c_cmd_link_delete(cmd);
 		}
 
-		void display_text(void *arg_text)
+		void DisplayText(void *arg_text)
 		{
 			char *text = (char *)arg_text;
 			uint8_t text_len = strlen(text);
@@ -111,7 +111,7 @@ namespace esp_sio_dev
 			i2c_master_write_byte(cmd, (OLED_I2C_ADDRESS << 1) | I2C_MASTER_WRITE, true);
 
 			i2c_master_write_byte(cmd, OLED_CONTROL_BYTE_CMD_STREAM, true);
-			i2c_master_write_byte(cmd, 0x00, true); // reset column
+			i2c_master_write_byte(cmd, 0x00, true); // s column
 			i2c_master_write_byte(cmd, 0x10, true);
 			i2c_master_write_byte(cmd, 0xB0 | cur_page, true); // reset page
 
@@ -167,13 +167,9 @@ namespace esp_sio_dev
 			i2c_param_config(I2C_NUM_1, &i2c_config);
 			i2c_driver_install(I2C_NUM_1, I2C_MODE_MASTER, 0, 0, 0);
 
-			i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+			Reset();
 
-			// Reset OLED
-			gpio_set_direction(kOLEDPin_RST, GPIO_MODE_OUTPUT);
-			gpio_set_level(kOLEDPin_RST, 0);
-			vTaskDelay(pdMS_TO_TICKS(100));
-			gpio_set_level(kOLEDPin_RST, 1);
+			i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
 			i2c_master_start(cmd);
 			i2c_master_write_byte(cmd, (OLED_I2C_ADDRESS << 1) | I2C_MASTER_WRITE, true);
@@ -220,7 +216,16 @@ namespace esp_sio_dev
 			i2c_cmd_link_delete(cmd);
 
 			Clear();
-			display_text((void *)"Hello world!\nMulitine is OK!\nAnother line");
+			DisplayText((void *)"Hello world!\nMulitine is OK!\nAnother line");
+		}
+
+		void Reset()
+		{
+			// Reset OLED
+			gpio_set_direction(kOLEDPin_RST, GPIO_MODE_OUTPUT);
+			gpio_set_level(kOLEDPin_RST, 0);
+			vTaskDelay(pdMS_TO_TICKS(100));
+			gpio_set_level(kOLEDPin_RST, 1);
 		}
 	} // oled
 } // esp_sio_dev

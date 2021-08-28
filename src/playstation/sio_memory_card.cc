@@ -17,17 +17,19 @@ namespace esp_sio_dev
   {
     namespace memory_card
     {
-
       uint8_t DRAM_ATTR memory_card_ram[131072] = {};
 
       uint8_t DRAM_ATTR flag = Flags::kDirectoryUnread;
 
       static uint8_t DRAM_ATTR current_command;
       static uint16_t DRAM_ATTR command_ticks;
+
       uint16_t DRAM_ATTR sector;
       static uint8_t DRAM_ATTR sector_offset;
+
       static uint8_t DRAM_ATTR checksum_in;
       static uint8_t DRAM_ATTR checksum_out;
+
       static bool DRAM_ATTR uncommited_soft_write = false;
       bool DRAM_ATTR committed_to_storage = true;
       uint64_t DRAM_ATTR last_write_tick;
@@ -49,12 +51,14 @@ namespace esp_sio_dev
 
           // Directory structure was updated, reset directory status
           if (sector == 0x0000)
+          {
             flag = Flags::kDirectoryUnread;
+          }
 
           // Clear (soft)buffer status before return
           uncommited_soft_write = false;
           committed_to_storage = false;
-          last_write_tick = sio::event_counter;
+          last_write_tick = sio::event_ticks;
         }
 
         return;
@@ -368,7 +372,6 @@ namespace esp_sio_dev
 
         switch (command_ticks)
         {
-
         case 0:              // 20h Ping Command
         case 1:              // 00h Reserved
         case 2:              // 00h Reserved
@@ -392,5 +395,6 @@ namespace esp_sio_dev
         return data_out;
       }
     } // namespace memory_card
-  }   // namespace sio
+
+  } // namespace sio
 } // namespace esp_sio_dev

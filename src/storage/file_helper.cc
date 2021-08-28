@@ -17,20 +17,65 @@ namespace esp_sio_dev
   {
     char loaded_file_path[CONFIG_FATFS_MAX_LFN + 1];
 
-    void SD_Write_Task(void *params)
+    void Task_Write(void *params)
     {
+      uint8_t write_fail_count = 0;
+      uint32_t wait_start_time = 0;
+      uint64_t wait_start_tick = 0;
+
+
+      ESP_LOGI(kLogPrefix, "Entering write task loop\n");
       while (1)
       {
-        if (sio::memory_card::committed_to_storage == false && sio::memory_card::last_write_tick + 50 <= sio::event_counter)
+        while (sio::memory_card::committed_to_storage == false)
         {
-          if(WriteFile() < 0)
+          if (write_fail_count < MAX_WRITE_FAILURES)
           {
-            vTaskDelay(200 / portTICK_PERIOD_MS);
+            if (wait_start_time == 0 || wait_start_tick != sio::event_ticks)
+            {
+              // Using this to watch for total inactivity of SIO traffic
+              wait_start_time = esp_log_timestamp();
+              wait_start_tick = sio::event_ticks;
+            }
+
+            // if wait period in ticks or milliseconds reached, proceed with write
+            if (sio::memory_card::last_write_tick + 50 <= sio::event_ticks || (esp_log_timestamp() - wait_start_time) >= 500)
+            {
+              if (WriteFile() < 0)
+              {
+                write_fail_count++;
+                ESP_LOGW(kLogPrefix, "Write fail count %i, delay 1 second\n", write_fail_count);
+                vTaskDelay(1000 / portTICK_PERIOD_MS);
+              }
+              else
+              {
+                sio::memory_card::committed_to_storage = true;
+                write_fail_count = 0;
+                wait_start_time = 0;
+                wait_start_tick = 0;
+              }
+            }
+            else
+            {
+              vTaskDelay(portTICK_PERIOD_MS);
+            }
+          }
+          else
+          {
+            // To-do: Implement plan b here.
+            // For now, toggle this just so we don't infinite loop
+            sio::memory_card::committed_to_storage = true;
+            write_fail_count = 0;
+            wait_start_time = 0;
+            wait_start_tick = 0;
+            ESP_LOGE(kLogPrefix, "Bailed on write!\n");
+            //break; // break from inner loop
           }
         }
-
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(portTICK_PERIOD_MS);
       }
+
+      vTaskDelete(NULL);
     }
 
     void LoadCardFromFile(char *filepath, void *destination)
@@ -80,7 +125,7 @@ namespace esp_sio_dev
 
         sio::memory_card::flag = sio::memory_card::Flags::kDirectoryUnread;
         sio::memory_card::GoIdle();
-        sio::memory_card::last_write_tick = sio::event_counter;
+        sio::memory_card::last_write_tick = sio::event_ticks;
         sio::memory_card::committed_to_storage = true;
       }
 
@@ -119,15 +164,11 @@ namespace esp_sio_dev
       }
       else
       {
-        ESP_LOGI(kLogPrefix, "File written!\n");
+        write_end_time = esp_log_timestamp();
+        ESP_LOGI(kLogPrefix, "File written in %ims\n", write_end_time - write_start_time);
       }
 
       fclose(mc_file);
-
-      write_end_time = esp_log_timestamp();
-      sio::memory_card::committed_to_storage = true;
-
-      printf("Took %i ms to write file.\n", write_end_time - write_start_time);
 
       return 0;
     }

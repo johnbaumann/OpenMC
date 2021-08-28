@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+#define MAX_WRITE_FAILURES 4
+
 namespace esp_sio_dev
 {
   namespace storage
@@ -10,7 +12,7 @@ namespace esp_sio_dev
     extern FILE *mc_file;
     extern int rw_fail_count;
 
-    void SD_Write_Task(void *params);
+    void Task_Write(void *params);
     void LoadCardFromFile(char *filepath, void *destination);
     int WriteFile();
   } // storage

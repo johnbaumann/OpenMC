@@ -18,7 +18,7 @@ namespace esp_sio_dev
         bool DRAM_ATTR pad_enabled = false;
         bool DRAM_ATTR net_yaroze_enabled = false;
 
-        uint64_t DRAM_ATTR event_counter;
+        uint64_t DRAM_ATTR event_ticks;
 
         void IRAM_ATTR GoIdle()
         {
@@ -30,7 +30,7 @@ namespace esp_sio_dev
 
         void IRAM_ATTR Init()
         {
-            event_counter = 0;
+            event_ticks = 0;
             memory_card::last_write_tick = 0;
             GoIdle();
         }
@@ -138,9 +138,9 @@ namespace esp_sio_dev
 
         void IRAM_ATTR TickEventCounter()
         {
-            event_counter++;
+            event_ticks++;
             // Roll-over detection
-            if (event_counter == 0)
+            if (event_ticks == 0)
             {
                 memory_card::last_write_tick = 0;
             }
