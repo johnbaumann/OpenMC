@@ -21,14 +21,13 @@ namespace esp_sio_dev
         extern bool selected;
         extern bool enabled;
 
-        uint32_t IRAM_ATTR InterruptHandler(uint32_t cause);
+        uint32_t InterruptHandler(uint32_t cause);
         void ActiveMode();
         void Disable();
         void Enable();
         void InitPins();
         void InstallInterrupt();
         void PassiveMode();
-        bool IRAM_ATTR SendAck();
 
         inline bool IRAM_ATTR SendAck()
         {

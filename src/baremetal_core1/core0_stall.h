@@ -13,9 +13,11 @@ extern "C"
 {
 #endif
 
-    void IRAM_ATTR core0_stall_start(void);
-    void IRAM_ATTR core0_stall_end(void);
-    void IRAM_ATTR core0_stall_init(void);
+    void core0_stall_disable(void);
+    void core0_stall_enable(void);
+    void core0_stall_end(void);
+    void core0_stall_init(void);
+    void core0_stall_start(void);
 
 #ifdef __cplusplus
 }

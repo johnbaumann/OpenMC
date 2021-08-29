@@ -32,7 +32,8 @@ namespace esp_sio_dev
 
       static bool DRAM_ATTR uncommited_soft_write = false;
       bool DRAM_ATTR committed_to_storage = true;
-      uint64_t DRAM_ATTR last_write_tick;
+      uint64_t volatile DRAM_ATTR last_tick;
+      uint64_t volatile DRAM_ATTR last_write_tick;
 
       static uint8_t DRAM_ATTR data_buffer[128];
 
@@ -41,12 +42,19 @@ namespace esp_sio_dev
 
       void IRAM_ATTR Commit()
       {
+        bool sector_changed = false;
+        uint32_t sector_offset = (sector * 128);
+
         if (uncommited_soft_write)
         {
           // Write buffer to memory page
           for (int i = 0; i < 128; i++)
           {
-            memory_card_ram[(sector * 128) + i] = data_buffer[i];
+            if (memory_card_ram[sector_offset + i] != data_buffer[i])
+            {
+              sector_changed = true;
+              memory_card_ram[sector_offset + i] = data_buffer[i];
+            }
           }
 
           // Directory structure was updated, reset directory status
@@ -57,7 +65,11 @@ namespace esp_sio_dev
 
           // Clear (soft)buffer status before return
           uncommited_soft_write = false;
-          committed_to_storage = false;
+
+          if (sector_changed)
+          {
+            committed_to_storage = false;
+          }
           last_write_tick = sio::event_ticks;
         }
 
@@ -75,6 +87,8 @@ namespace esp_sio_dev
       {
         uint8_t data_out;
         bool command_routed = false;
+
+        last_tick = sio::event_ticks;
 
         //Loop until command is properly routed
         while (!command_routed)

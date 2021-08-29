@@ -68,7 +68,8 @@ namespace esp_sio_dev
             extern uint8_t game_id[256];
             extern uint8_t game_id_length;
 
-            extern uint64_t last_write_tick;
+            extern uint64_t volatile last_tick;
+            extern uint64_t volatile last_write_tick;
             extern bool committed_to_storage;
 
             void Commit();

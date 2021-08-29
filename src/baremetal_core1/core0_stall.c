@@ -22,20 +22,37 @@
 #include "sdkconfig.h"
 
 /* these global variables are accessed from interrupt vector, hence not declared as static */
-uint32_t volatile DRAM_ATTR core0_stall_start_var[1];      //dport register could be accessed
-uint32_t volatile DRAM_ATTR core0_stall_end_var[1];        //dport register is accessed over
+uint32_t volatile DRAM_ATTR core0_stall_start_var[1]; //dport register could be accessed
+uint32_t volatile DRAM_ATTR core0_stall_end_var[1];   //dport register is accessed over
+bool volatile DRAM_ATTR core0_stall_enabled = true;
+
+void IRAM_ATTR core0_stall_disable(void)
+{
+    core0_stall_enabled = false;
+}
+
+// Experimental, allows blocking core0 stalls.
+// This breaks memory card traffic, so not sure this has any use.
+void IRAM_ATTR core0_stall_enable(void)
+{
+    core0_stall_enabled = true;
+}
 
 void IRAM_ATTR core0_stall_start(void)
 {
-    core0_stall_start_var[0] = 0;
-    core0_stall_end_var[0] = 0;
+    if (core0_stall_enabled)
+    {
+        core0_stall_start_var[0] = 0;
+        core0_stall_end_var[0] = 0;
+    }
 
     _DPORT_REG_WRITE(DPORT_CPU_INTR_FROM_CPU_2_REG, DPORT_CPU_INTR_FROM_CPU_2); //interrupt on cpu0
 }
 
 void IRAM_ATTR core0_stall_end(void)
 {
-    while (!core0_stall_start_var[0]);
+    while (!core0_stall_start_var[0])
+        ;
     core0_stall_end_var[0] = 1;
 }
 
@@ -43,6 +60,7 @@ void IRAM_ATTR core0_stall_init(void)
 {
     core0_stall_start_var[0] = 0;
     core0_stall_end_var[0] = 0;
+    core0_stall_enabled = true;
 
     ESP_INTR_DISABLE(31);
     intr_matrix_set(0, ETS_FROM_CPU_INTR2_SOURCE, 31);

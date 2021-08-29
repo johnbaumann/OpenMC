@@ -23,7 +23,6 @@ namespace esp_sio_dev
       uint32_t wait_start_time = 0;
       uint64_t wait_start_tick = 0;
 
-
       ESP_LOGI(kLogPrefix, "Entering write task loop\n");
       while (1)
       {
@@ -39,7 +38,7 @@ namespace esp_sio_dev
             }
 
             // if wait period in ticks or milliseconds reached, proceed with write
-            if (sio::memory_card::last_write_tick + 50 <= sio::event_ticks || (esp_log_timestamp() - wait_start_time) >= 500)
+            if ((sio::event_ticks - sio::memory_card::last_write_tick >= 50) || esp_log_timestamp() - wait_start_time >= 500)
             {
               if (WriteFile() < 0)
               {
