@@ -11,7 +11,9 @@ namespace esp_sio_dev
   {
     extern FILE *mc_file;
     extern int rw_fail_count;
+    extern bool ready;
 
+    void Init();
     void Task_Write(void *params);
     void LoadCardFromFile(char *filepath, void *destination);
     int WriteFile();

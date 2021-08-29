@@ -5,10 +5,13 @@ namespace esp_sio_dev
 {
     namespace storage
     {
-        extern bool sd_mounted;
+        namespace sdcard
+        {
+            extern bool sd_mounted;
 
-        void mount_sdcard(void);
-        void Task_MountSDCard(void *params);
+            int mount(void);
+            void Task_MountSDCard(void *params);
+        } // sdcard
     } // storage
 } // esp_sio_dev
 

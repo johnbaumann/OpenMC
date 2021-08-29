@@ -1,6 +1,6 @@
 #include "wifi/client.h"
 
-#include "web/file_server.h"
+#include "wifi/wifi.h"
 #include "logging.h"
 
 #include <string.h>
@@ -33,7 +33,6 @@ namespace esp_sio_dev
     {
         namespace client
         {
-            void wifi_init_sta();
             // FreeRTOS event group to signal when we are connected
             static EventGroupHandle_t s_wifi_event_group;
 
@@ -42,7 +41,7 @@ namespace esp_sio_dev
             void Task_Start(void *params)
             {
                 ESP_LOGI(kLogPrefix, "Wifi client setup task on core %i\n", xPortGetCoreID());
-                wifi_init_sta();
+                Init();
                 ESP_LOGI(kLogPrefix, "KILLING Wifi client setup task on core %i\n", xPortGetCoreID());
                 vTaskDelete(NULL); // NULL means "this task"
             }
@@ -76,7 +75,7 @@ namespace esp_sio_dev
                 }
             }
 
-            void wifi_init_sta(void)
+            void Init(void)
             {
                 // Initialize NVS
                 esp_err_t ret = nvs_flash_init();
@@ -123,7 +122,7 @@ namespace esp_sio_dev
                 ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
                 ESP_ERROR_CHECK(esp_wifi_start());
 
-                ESP_LOGI(kLogPrefix, "wifi_init_sta finished.");
+                ESP_LOGI(kLogPrefix, "Init finished.");
 
                 // Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
                 // number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above)
@@ -135,7 +134,7 @@ namespace esp_sio_dev
                 {
                     ESP_LOGI(kLogPrefix, "connected to ap SSID:%s", EXAMPLE_ESP_WIFI_SSID);
 
-                    web::file_server::net_interface_ready = true;
+                    wifi::ready = true;
                 }
                 else if (bits & WIFI_FAIL_BIT)
                 {

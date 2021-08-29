@@ -1,6 +1,6 @@
 #include "sio_memory_card.h"
 
-#include "storage/file_helper.h"
+#include "storage/storage.h"
 #include "logging.h"
 #include "playstation/sio.h"
 #include "playstation/spi.h"

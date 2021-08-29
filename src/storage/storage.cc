@@ -1,6 +1,9 @@
-#include "storage/file_helper.h"
+#include "storage/storage.h"
+
 #include "playstation/sio.h"
 #include "playstation/sio_memory_card.h"
+#include "storage/sdcard.h"
+#include "storage/spiffs.h"
 
 #include "logging.h"
 
@@ -16,6 +19,7 @@ namespace esp_sio_dev
   namespace storage
   {
     char loaded_file_path[CONFIG_FATFS_MAX_LFN + 1];
+    bool ready = false;
 
     void Task_Write(void *params)
     {
@@ -75,6 +79,16 @@ namespace esp_sio_dev
       }
 
       vTaskDelete(NULL);
+    }
+
+    void Init()
+    {
+      if(sdcard::mount() < 0)
+      {
+        // sd init failed, set base path to spiffs
+      }
+
+      spiffs::Init();
     }
 
     void LoadCardFromFile(char *filepath, void *destination)

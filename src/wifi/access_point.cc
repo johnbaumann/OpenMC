@@ -1,5 +1,6 @@
 #include "wifi/access_point.h"
 
+#include "wifi/wifi.h"
 #include "web/file_server.h"
 #include "logging.h"
 
@@ -80,7 +81,7 @@ namespace esp_sio_dev
 
                 ESP_LOGI(kLogPrefix, "Init finished. SSID:%s password:%s channel:%d", EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS, EXAMPLE_ESP_WIFI_CHANNEL);
 
-                web::file_server::net_interface_ready = true;
+                wifi::ready = true;
             }
         } // access_point
 

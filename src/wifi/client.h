@@ -8,6 +8,7 @@ namespace esp_sio_dev
         namespace client
         {
             void Task_Start(void *params);
+            void Init(void);
         } // client
     } // wifi
 } // esp_sio_dev

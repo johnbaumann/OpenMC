@@ -1,9 +1,10 @@
-#include "storage/file_helper.h"
 #include "web/file_server.h"
+#include "storage/storage.h"
 #include "storage/sdcard.h"
 #include "logging.h"
 #include "wifi/access_point.h"
 #include "wifi/client.h"
+#include "wifi/wifi.h"
 #include "oled/oled.h"
 #include "pins.h"
 #include "playstation/sio.h"
@@ -24,11 +25,8 @@
 #include <esp_intr_alloc.h>
 
 // Task sizes - there should be approximately 5% free space to allow for growth
-#define SD_CARD_TASK_SIZE 2272
 //#define FILE_WRITE_TASK_SIZE 1760
 #define FILE_WRITE_TASK_SIZE 3096
-#define FILE_SERVER_TASK_SIZE 1877
-#define WIFI_CLIENT_TASK_SIZE 2348
 
 // rama
 // sickle <3
@@ -63,31 +61,26 @@ namespace esp_sio_dev
         gpio_set_level(kPin_LED, 0);
 
         oled::Init();
-
-        // Create a task to mount the SD Card
-        xTaskCreatePinnedToCore(storage::Task_MountSDCard, "sd_card_task_core_0", SD_CARD_TASK_SIZE, NULL, 0, NULL, 0);
-        //storage::init_spiffs();
-
-        core0_stall_init();
+        storage::Init();
+        storage::LoadCardFromFile((char *)"/sdcard/freeboot.mc", sio::memory_card::memory_card_ram);
+        xTaskCreatePinnedToCore(storage::Task_Write, "write_task_core_0", FILE_WRITE_TASK_SIZE, NULL, 0, NULL, 0);
 
         sio::Init();       // Init the SIO state machine to a default state.
         spi::InitPins();   // Setup the pins for bitbanged SPI
         spi::Enable();     // Enable SPI
         SetupInterrupts(); // Create a task to install our interrupt handler on Core 1, ESP32 likes Core 0 for WiFi
 
+        core0_stall_init();
         start_app_cpu();
 
-        xTaskCreatePinnedToCore(storage::Task_Write, "write_task_core_0", FILE_WRITE_TASK_SIZE, NULL, 0, NULL, 0);
+        wifi::client::Init();
 
-        //xTaskCreatePinnedToCore(wifi::access_point::Task_Start, "wifi_ap_task_core_0", 1024 * 3, NULL, 0, NULL, 0);
-        xTaskCreatePinnedToCore(wifi::client::Task_Start, "wifi_client_task_core_0", WIFI_CLIENT_TASK_SIZE, NULL, 0, NULL, 0);
-
-        while (web::file_server::net_interface_ready == false && web::file_server::sd_filesystem_ready == false)
+        while (wifi::ready == false || storage::ready == false)
         {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
 
-        xTaskCreatePinnedToCore(web::file_server::Task_StartFileServer, "file_server_task_core_0", FILE_SERVER_TASK_SIZE, NULL, 0, NULL, 0);
+        ESP_ERROR_CHECK(web::file_server::start_file_server("/sdcard"));
 
         //xTaskCreate(tcp_server_task, "tcp_server", 4096, (void *)AF_INET, 5, NULL);
 

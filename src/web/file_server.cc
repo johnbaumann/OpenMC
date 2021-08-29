@@ -9,9 +9,9 @@
 
 #include "web/file_server.h"
 
-#include "storage/file_helper.h"
 #include "playstation/sio.h"
 #include "playstation/sio_memory_card.h"
+#include "storage/storage.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -43,16 +43,12 @@ namespace esp_sio_dev
     {
         namespace file_server
         {
-            // To-do: Centralize these to the top-level namespace
-            volatile bool net_interface_ready = false;
-            volatile bool sd_filesystem_ready = false;
-
             struct file_server_data
             {
-                /* Base path of file storage */
+                // Base path of file storage
                 char base_path[FILE_PATH_MAX + 1];
 
-                /* Scratch buffer for temporary storage during file transfer */
+                // Scratch buffer for temporary storage during file transfer
                 char scratch[SCRATCH_BUFSIZE];
             };
 
@@ -178,6 +174,7 @@ namespace esp_sio_dev
 
                 /* Send empty chunk to signal HTTP response completion */
                 httpd_resp_sendstr_chunk(req, NULL);
+                
                 return ESP_OK;
             }
 
@@ -560,9 +557,9 @@ namespace esp_sio_dev
                 httpd_handle_t server = NULL;
                 httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
-                /* Use the URI wildcard matching function in order to
-     * allow the same handler to respond to multiple different
-     * target URIs which match the wildcard scheme */
+                // Use the URI wildcard matching function in order to
+                // allow the same handler to respond to multiple different
+                // target URIs which match the wildcard scheme
                 config.uri_match_fn = httpd_uri_match_wildcard;
 
                 ESP_LOGI(TAG, "Starting HTTP Server on port: '%d'", config.server_port);
@@ -572,7 +569,7 @@ namespace esp_sio_dev
                     return ESP_FAIL;
                 }
 
-                /* URI handler for getting uploaded files */
+                // URI handler for getting uploaded files
                 httpd_uri_t file_download = {
                     .uri = "/*", // Match all URIs of type /path/to/file
                     .method = HTTP_GET,
@@ -581,7 +578,7 @@ namespace esp_sio_dev
                 };
                 httpd_register_uri_handler(server, &file_download);
 
-                /* URI handler for uploading files to server */
+                // URI handler for uploading files to server
                 httpd_uri_t file_upload = {
                     .uri = "/upload/*", // Match all URIs of type /upload/path/to/file
                     .method = HTTP_POST,
@@ -590,7 +587,7 @@ namespace esp_sio_dev
                 };
                 httpd_register_uri_handler(server, &file_upload);
 
-                /* URI handler for deleting files from server */
+                // URI handler for deleting files from server
                 httpd_uri_t file_delete = {
                     .uri = "/delete/*", // Match all URIs of type /delete/path/to/file
                     .method = HTTP_POST,
@@ -615,7 +612,7 @@ namespace esp_sio_dev
                 ESP_LOGI(TAG, "File server setup task on core %i\n", xPortGetCoreID());
                 ESP_ERROR_CHECK(start_file_server("/sdcard"));
                 ESP_LOGI(TAG, "KILLING file server setup task on core %i\n", xPortGetCoreID());
-                //printf("StartFileServer Task free words = %i\n", uxTaskGetStackHighWaterMark(NULL));
+                
                 vTaskDelete(NULL); // NULL means "this task"
             }
         } // file_server

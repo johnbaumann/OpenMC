@@ -7,7 +7,10 @@ namespace esp_sio_dev
 {
     namespace storage
     {
-        esp_err_t init_spiffs();
+        namespace spiffs
+        {
+            esp_err_t Init();
+        }
     } // storage
 } // esp_sio_dev
 
