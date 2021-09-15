@@ -6,6 +6,7 @@ namespace esp_sio_dev
     namespace wifi
     {
         extern bool ready;
+        extern char ip_address[16];
     } // wifi
 } // esp_sio_dev
 

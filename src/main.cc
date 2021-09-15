@@ -11,6 +11,7 @@
 #include "playstation/sio_memory_card.h"
 #include "playstation/spi.h"
 #include "storage/spiffs.h"
+#include "touch_input/touch.h"
 
 #include "baremetal_core1/core0_stall.h"
 #include "baremetal_core1/bare_metal_app_cpu.h"
@@ -79,15 +80,13 @@ namespace esp_sio_dev
             //     fps_counter_start = render_end_time;
             // }
 
-            
             oled::ClearBuffer();
 
             //oled::DrawMessage(fps_display, 0, 0);
 
-
-            if(wifi::ready)
+            if (wifi::ready)
             {
-                sprintf(text_buffer, "Wi-fi connected");
+                sprintf(text_buffer, "Wi-fi connected\nIP:%s", wifi::ip_address);
             }
             else
             {
@@ -96,7 +95,7 @@ namespace esp_sio_dev
             oled::DrawMessage(text_buffer, 0, 0, false, true);
 
             sprintf(text_buffer, "Current file:\n%s", storage::loaded_file_path);
-            oled::DrawMessage(text_buffer, 0, 7, true, true);
+            oled::DrawMessage(text_buffer, 0, 14, true, true);
 
             oled::DrawBuffer();
 
@@ -124,8 +123,9 @@ namespace esp_sio_dev
         gpio_set_direction(kPin_LED, GPIO_MODE_OUTPUT);
         gpio_set_level(kPin_LED, 0);
 
-        oled::Init();
+        oled::Init(); // Init oled screen
         xTaskCreatePinnedToCore(Task_UpdateScreen, "screen_update_task_core_0", 2048, NULL, 0, NULL, 0);
+        //xTaskCreatePinnedToCore(tp_example_read_task, "touch_pad_Read_task_core_0", 2048, NULL, 0, NULL, 0);
 
         storage::Init();
         storage::LoadCardFromFile((char *)"/sdcard/freeboot.mc", sio::memory_card::memory_card_ram);
@@ -153,6 +153,8 @@ namespace esp_sio_dev
         vTaskDelay(5000 / portTICK_PERIOD_MS);
 
         printf("Free Heap = %i\n", esp_get_free_heap_size());
+        printf("Minimum Free Heap = %i\n", esp_get_minimum_free_heap_size());
+        printf("Free Internal Heap = %i\n", esp_get_free_internal_heap_size());
     }
 }
 

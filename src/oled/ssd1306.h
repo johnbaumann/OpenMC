@@ -221,6 +221,7 @@ namespace esp_sio_dev
         void Init(void);
         void ResetScreen();
 
+        // Built in screen functions
         esp_err_t SetContrast(uint8_t contrast);
         esp_err_t DisplayFromRAM();
         esp_err_t EntireDisplayOn();
@@ -235,6 +236,15 @@ namespace esp_sio_dev
         esp_err_t DeactivateScroll();
         esp_err_t ActivateScroll();
         esp_err_t SetVerticalScrollArea(uint8_t num_top_fix_rows, uint8_t num_scroll_rows);
+        esp_err_t SetChargePump(uint8_t setting);
+        esp_err_t SetMemoryAddressingMode(MemoryAddressing mode);
+        esp_err_t SetColumnAddress(uint8_t column_start, Page column_end);
+        esp_err_t SetPageAddress(uint8_t page_start, Page page_end);
+        esp_err_t SetSegmentReset();
+        esp_err_t SetSegmentRemap();
+        esp_err_t SetMultiPlexRatio(uint8_t ratio);
+        esp_err_t SetCOMReset();
+        esp_err_t SetCOMRemap();
     }
 }
 

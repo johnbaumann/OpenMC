@@ -70,6 +70,7 @@ namespace esp_sio_dev
                 {
                     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
                     ESP_LOGI(kLogPrefix, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+                    sprintf(wifi::ip_address, IPSTR, IP2STR(&event->ip_info.ip));
                     s_retry_num = 0;
                     xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
                 }

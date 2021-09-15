@@ -1,5 +1,5 @@
-#ifndef _FILE_HELPER_H
-#define _FILE_HELPER_H
+#ifndef _STORAGE_H
+#define _STORAGE_H
 
 #include <stdio.h>
 
@@ -21,4 +21,4 @@ namespace esp_sio_dev
   } // storage
 } // esp_sio_dev
 
-#endif // _FILE_HELPER_H
+#endif // _STORAGE_H

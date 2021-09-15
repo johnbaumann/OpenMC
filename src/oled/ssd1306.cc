@@ -79,7 +79,7 @@ namespace esp_sio_dev
 					continue;
 				}
 
-				if(auto_wrap && ((_x + GLYPH_WIDTH) >= DISPLAY_WIDTH))
+				if (auto_wrap && ((_x + GLYPH_WIDTH) >= DISPLAY_WIDTH))
 				{
 					_y += GLYPH_HEIGHT + 1;
 					_x = x_pos;
@@ -258,6 +258,73 @@ namespace esp_sio_dev
 				num_scroll_rows};
 
 			return SendCommandStream(command_list, 3);
+		}
+
+		esp_err_t SetChargePump(uint8_t setting)
+		{
+			uint8_t command_list[2] = {
+				Commands::kSetChargePump,
+				setting};
+
+			return SendCommandStream(command_list, 2);
+		}
+
+		esp_err_t SetMemoryAddressingMode(MemoryAddressing mode)
+		{
+			uint8_t command_list[2] = {
+				Commands::kSetMemoryAddressingMode,
+				mode};
+
+			return SendCommandStream(command_list, 2);
+		}
+
+		esp_err_t SetColumnAddress(uint8_t column_start, Page column_end)
+		{
+			uint8_t command_list[3] = {
+				Commands::kSetColumnAddress,
+				column_start,
+				column_end};
+
+			return SendCommandStream(command_list, 2);
+		}
+
+		esp_err_t SetPageAddress(uint8_t page_start, Page page_end)
+		{
+			uint8_t command_list[3] = {
+				Commands::kSetPageAddress,
+				page_start,
+				page_end};
+
+			return SendCommandStream(command_list, 2);
+		}
+
+		esp_err_t SetSegmentReset()
+		{
+			return SendSingleCommand(Commands::kSegmentReset);
+		}
+
+		esp_err_t SetSegmentRemap()
+		{
+			return SendSingleCommand(Commands::kSegmentRemap);
+		}
+
+		esp_err_t SetMultiPlexRatio(uint8_t ratio)
+		{
+			uint8_t command_list[2] = {
+				Commands::kSetMultiplexRatio,
+				ratio};
+
+			return SendCommandStream(command_list, 2);
+		}
+
+		esp_err_t SetCOMReset()
+		{
+			return SendSingleCommand(Commands::kCOMReset);
+		}
+
+		esp_err_t SetCOMRemap()
+		{
+			return SendSingleCommand(Commands::kCOMRemap);
 		}
 
 		void DrawTestPatternToBuffer()
