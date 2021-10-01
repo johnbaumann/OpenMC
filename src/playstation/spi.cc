@@ -41,7 +41,7 @@ namespace esp_sio_dev
             enabled = true;
         }
 
-        void IRAM_ATTR InitPins()
+        void IRAM_ATTR Init()
         {
             gpio_config_t io_conf;
 
@@ -114,9 +114,6 @@ namespace esp_sio_dev
             return 0;
         }
 
-        // task runs on core 1, so the ints happen on core 1
-        // so as long as we're in InterruptHandler() the system won't
-        // bother us with interrupts on that core.
         // sickle the man!
         void InstallInterrupt()
         { 

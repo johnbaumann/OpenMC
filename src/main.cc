@@ -56,8 +56,8 @@ namespace esp_sio_dev
 
     void Task_UpdateScreen(void *params)
     {
-        // Currently maxes out at 21fps
-        uint8_t target_fps = 10;
+        // Currently maxes around 21fps
+        uint8_t target_fps = 1;
         uint8_t delay_per_frame = 1000 / target_fps;
         int32_t time_to_delay = 0;
         uint32_t render_start_time = 0;
@@ -122,39 +122,55 @@ namespace esp_sio_dev
         // Turn off LED
         gpio_set_direction(kPin_LED, GPIO_MODE_OUTPUT);
         gpio_set_level(kPin_LED, 0);
+        
+        // Turn screen backlight off and delay init at power on
+        // To allow voltage levels to stabilize
+        gpio_set_direction(kOLEDPin_Backlight, GPIO_MODE_OUTPUT);
+        gpio_set_level(kOLEDPin_Backlight, 1);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+        gpio_set_level(kOLEDPin_Backlight, 0);
 
         oled::Init(); // Init oled screen
+
         xTaskCreatePinnedToCore(Task_UpdateScreen, "screen_update_task_core_0", 2048, NULL, 0, NULL, 0);
         //xTaskCreatePinnedToCore(tp_example_read_task, "touch_pad_Read_task_core_0", 2048, NULL, 0, NULL, 0);
 
         storage::Init();
-        storage::LoadCardFromFile((char *)"/sdcard/freeboot.mc", sio::memory_card::memory_card_ram);
+
+        // To-do: Check settings - if no default file specified, load last file. If no previous file, do nothing
+        //storage::LoadCardFromFile((char *)"/sdcard/freeboot.mc", sio::memory_card::memory_card_ram);
+
+        // Auto-write task
         xTaskCreatePinnedToCore(storage::Task_Write, "write_task_core_0", FILE_WRITE_TASK_SIZE, NULL, 0, NULL, 0);
 
         sio::Init();       // Init the SIO state machine to a default state.
-        spi::InitPins();   // Setup the pins for bitbanged SPI
+        spi::Init();       // Setup the pins for bitbanged SPI
         spi::Enable();     // Enable SPI
-        SetupInterrupts(); // Create a task to install our interrupt handler on Core 1, ESP32 likes Core 0 for WiFi
+        SetupInterrupts(); // Create a task to install our interrupt handler on Core 1
 
         core0_stall_init();
         start_app_cpu();
 
+        // if client settings found do this
         wifi::client::Init();
+
+        // if no settings found, start access point mode
+        // Enable wifi scan mode, add option for wifi config from web server
+        //wifi::access_point::Init();
 
         while (wifi::ready == false || storage::ready == false)
         {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
 
-        ESP_ERROR_CHECK(web::file_server::start_file_server("/sdcard"));
-
+        ESP_ERROR_CHECK(web::file_server::start_file_server(storage::base_path));
+       
         //xTaskCreate(tcp_server_task, "tcp_server", 4096, (void *)AF_INET, 5, NULL);
 
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
-
-        printf("Free Heap = %i\n", esp_get_free_heap_size());
-        printf("Minimum Free Heap = %i\n", esp_get_minimum_free_heap_size());
-        printf("Free Internal Heap = %i\n", esp_get_free_internal_heap_size());
+        //ESP_LOGI(kLogPrefix,"Free Heap = %i\n", esp_get_free_heap_size());
+        //ESP_LOGI(kLogPrefix, "Free Internal Heap = %i\n", esp_get_free_internal_heap_size());
+        ESP_LOGI(kLogPrefix, "Minimum Free Heap = %i\n", esp_get_minimum_free_heap_size());
+        
     }
 }
 

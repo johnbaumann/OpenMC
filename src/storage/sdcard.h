@@ -1,6 +1,8 @@
 #ifndef _SDCARD_H
 #define _SDCARD_H
 
+#include <esp_err.h>
+
 namespace esp_sio_dev
 {
     namespace storage
@@ -9,7 +11,7 @@ namespace esp_sio_dev
         {
             extern bool sd_mounted;
 
-            int mount(void);
+            esp_err_t Init(void);
             void Task_MountSDCard(void *params);
         } // sdcard
     } // storage

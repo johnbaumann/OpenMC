@@ -8,12 +8,14 @@
 #include "web/file_server.h"
 
 #include <dirent.h>
+#include <esp_err.h>
 #include <esp_vfs.h>
-#include <string.h>
-#include <sys/unistd.h>
-#include <sys/stat.h>
 #include <esp_vfs_fat.h>
 #include <sdmmc_cmd.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/unistd.h>
+
 
 #define FILE_PATH_MAX CONFIG_FATFS_MAX_LFN
 
@@ -46,7 +48,7 @@ namespace esp_sio_dev
                 .command_timeout_ms = 0,
             };
 
-            int mount(void)
+            esp_err_t Init(void)
             {
                 esp_err_t ret;
 
@@ -79,7 +81,7 @@ namespace esp_sio_dev
                 if (ret != ESP_OK)
                 {
                     ESP_LOGE(kLogPrefix, "Failed to initialize bus.");
-                    return -1;
+                    return ESP_FAIL;
                 }
 
                 // This initializes the slot without card detect (CD) and write protect (WP) signals.
@@ -107,12 +109,10 @@ namespace esp_sio_dev
                                              "Make sure SD card lines have pull-up resistors in place.",
                                  esp_err_to_name(ret));
                     }
-                    return -2;
+                    return ESP_FAIL;
                 }
 
-                // Mount successful
-                storage::ready = true;
-                return 0;
+                return ESP_OK;
             }
 
             void unmount_sdcard(void)

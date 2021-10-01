@@ -9,6 +9,7 @@
 
 #include "web/file_server.h"
 
+#include "logging.h"
 #include "playstation/sio.h"
 #include "playstation/sio_memory_card.h"
 #include "storage/storage.h"

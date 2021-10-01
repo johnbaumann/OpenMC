@@ -10,16 +10,17 @@ const gpio_num_t kPin_LED = GPIO_NUM_25;
 // General
 
 // OLED
-const gpio_num_t kOLEDPin_SDA = GPIO_NUM_4;  // Serial Data
-const gpio_num_t kOLEDPin_SCL = GPIO_NUM_15; // Serial Clock
-const gpio_num_t kOLEDPin_RST = GPIO_NUM_16; // Reset
+const gpio_num_t kOLEDPin_SDA = GPIO_NUM_4;        // Serial Data
+const gpio_num_t kOLEDPin_SCL = GPIO_NUM_15;       // Serial Clock
+const gpio_num_t kOLEDPin_RST = GPIO_NUM_16;       // Reset
+const gpio_num_t kOLEDPin_Backlight = GPIO_NUM_21; // Backlight control
 // OLED
 
 // SD Card
-const gpio_num_t kSDPin_CS = GPIO_NUM_5;   // Chip Select - IN
-const gpio_num_t kSDPin_CLK = GPIO_NUM_18;  // Clock - OUT
-const gpio_num_t kSDPin_MISO = GPIO_NUM_19; // Master In Slave Out - IN
-const gpio_num_t kSDPin_MOSI = GPIO_NUM_23; // Master Out Slave In - OUT
+const gpio_num_t kSDPin_CS = GPIO_NUM_5;    // Chip Select - IN / CD
+const gpio_num_t kSDPin_CLK = GPIO_NUM_18;  // Clock - OUT / SCK
+const gpio_num_t kSDPin_MISO = GPIO_NUM_19; // Master In Slave Out - IN / D0
+const gpio_num_t kSDPin_MOSI = GPIO_NUM_23; // Master Out Slave In - OUT / CMD
 // SD Card
 
 // Playstation

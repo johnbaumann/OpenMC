@@ -25,7 +25,7 @@ namespace esp_sio_dev
         void ActiveMode();
         void Disable();
         void Enable();
-        void InitPins();
+        void Init();
         void InstallInterrupt();
         void PassiveMode();
 

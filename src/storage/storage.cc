@@ -19,6 +19,7 @@ namespace esp_sio_dev
   namespace storage
   {
     char loaded_file_path[CONFIG_FATFS_MAX_LFN + 1];
+    char base_path[16];
     bool ready = false;
 
     void Task_Write(void *params)
@@ -83,12 +84,23 @@ namespace esp_sio_dev
 
     void Init()
     {
-      if(sdcard::mount() < 0)
+      if (sdcard::Init() == ESP_OK)
       {
-        // sd init failed, set base path to spiffs
+        strcpy(base_path, "/sdcard");
+      }
+      else if (spiffs::Init() == ESP_OK)
+      {
+        strcpy(base_path, "/spiffs");
+      }
+      else
+      {
+        // Fallback option if all else fails
+        // MC Image only persists in memory
+        strcpy(base_path, "/ramfs");
       }
 
-      spiffs::Init();
+      // Mount successful
+      storage::ready = true;
     }
 
     void LoadCardFromFile(char *filepath, void *destination)
