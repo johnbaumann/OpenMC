@@ -45,7 +45,7 @@ namespace esp_sio_dev
             // if wait period in ticks or milliseconds reached, proceed with write
             if ((sio::event_ticks - sio::memory_card::last_write_tick >= 50) || esp_log_timestamp() - wait_start_time >= 500)
             {
-              if (WriteFile() < 0)
+              if (WriteFile() != 0)
               {
                 write_fail_count++;
                 ESP_LOGW(kLogPrefix, "Write fail count %i, delay 1 second\n", write_fail_count);
@@ -165,6 +165,7 @@ namespace esp_sio_dev
 
     int WriteFile()
     {
+      int result;
       FILE *mc_file;
       uint32_t write_end_time;
       uint32_t write_start_time = esp_log_timestamp();
@@ -175,27 +176,31 @@ namespace esp_sio_dev
       if (!mc_file)
       {
         ESP_LOGE(kLogPrefix, "Error opening file!\n");
-        return -1;
-      }
-
-      if (fwrite(sio::memory_card::memory_card_ram, 1, (128 * 1024), mc_file) != (128 * 1024))
-      {
-        ESP_LOGE(kLogPrefix, "Error writing file!\n");
-        return -3;
-      }
-      else if (ferror(mc_file))
-      {
-        ESP_LOGE(kLogPrefix, "Unknown error writing file!\n");
+        result = -1;
       }
       else
       {
-        write_end_time = esp_log_timestamp();
-        ESP_LOGI(kLogPrefix, "File written in %ims\n", write_end_time - write_start_time);
+        if (fwrite(sio::memory_card::memory_card_ram, 1, (128 * 1024), mc_file) != (128 * 1024))
+        {
+          ESP_LOGE(kLogPrefix, "Error writing file!\n");
+          result = -2;
+        }
+        else if (ferror(mc_file) != 0)
+        {
+          ESP_LOGE(kLogPrefix, "Unknown error writing file!\n");
+          result = -3;
+        }
+        else
+        {
+          write_end_time = esp_log_timestamp();
+          ESP_LOGI(kLogPrefix, "File written in %ims\n", write_end_time - write_start_time);
+          result = 0;
+        }
+
+        fclose(mc_file);
       }
 
-      fclose(mc_file);
-
-      return 0;
+      return result;
     }
   } // storage
 } // esp_sio_dev
