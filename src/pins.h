@@ -2,6 +2,7 @@
 #define _PINS_H
 
 #include <driver/gpio.h>
+#include <driver/touch_pad.h>
 
 // To-do: Assign definitions to respective namespaces
 
@@ -15,6 +16,15 @@ const gpio_num_t kOLEDPin_SCL = GPIO_NUM_15;       // Serial Clock
 const gpio_num_t kOLEDPin_RST = GPIO_NUM_16;       // Reset
 const gpio_num_t kOLEDPin_Backlight = GPIO_NUM_21; // Backlight control
 // OLED
+
+// Touch Input
+const touch_pad_t kTOUCH_Left = TOUCH_PAD_NUM6;
+const touch_pad_t kTOUCH_Confirm = TOUCH_PAD_NUM5;
+const touch_pad_t kTOUCH_Right = TOUCH_PAD_NUM4;
+const uint8_t kTOUCH_Left_Bitmask = (1 << 2);
+const uint8_t kTOUCH_Confirm_Bitmask = (1 << 1);
+const uint8_t kTOUCH_Right_Bitmask = (1 << 0);
+// Touch Input
 
 // SD Card
 const gpio_num_t kSDPin_CS = GPIO_NUM_5;    // Chip Select - IN / CD

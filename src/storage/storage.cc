@@ -110,7 +110,7 @@ namespace esp_sio_dev
       sio::memory_card_enabled = false;
 
       ESP_LOGI(kLogPrefix, "LoadCardFromFile(%s)\n", filepath);
-      mc_file = fopen(filepath, "r+");
+      mc_file = fopen(filepath, "r");
       uint8_t *dest = (uint8_t *)destination;
 
       long file_size;
@@ -170,8 +170,16 @@ namespace esp_sio_dev
       uint32_t write_end_time;
       uint32_t write_start_time = esp_log_timestamp();
 
+      //unlink
+
+      if(strcmp(loaded_file_path, "") == 0)
+      {
+        ESP_LOGE(kLogPrefix, "No file loaded, abort write\n");
+        return -4;
+      }
+
       ESP_LOGI(kLogPrefix, "WriteFile(%s)\n", loaded_file_path);
-      mc_file = fopen(loaded_file_path, "r+");
+      mc_file = fopen(loaded_file_path, "w");
 
       if (!mc_file)
       {
