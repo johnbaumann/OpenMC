@@ -99,6 +99,10 @@ namespace esp_sio_dev
         strcpy(base_path, "/ramfs");
       }
 
+      // Load default.mc, create file if it doesn't exist.  
+      sprintf(loaded_file_path, "%s/default.mc", base_path);
+      LoadCardFromFile(loaded_file_path, sio::memory_card::memory_card_ram);
+
       // Mount successful
       storage::ready = true;
     }

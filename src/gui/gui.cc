@@ -14,20 +14,88 @@ namespace esp_sio_dev
 {
     namespace gui
     {
+        DisplayState display_state = kMainStatus;
+        static uint32_t last_input_timestamp;
 
         void Callback_Left(void)
         {
+            last_input_timestamp = esp_log_timestamp();
             printf("Callback Left\n");
         }
 
         void Callback_Confirm(void)
         {
+            last_input_timestamp = esp_log_timestamp();
             printf("Callback Confirm\n");
         }
 
         void Callback_Right(void)
         {
+            last_input_timestamp = esp_log_timestamp();
             printf("Callback Right\n");
+        }
+
+        static void DoDisplay(void)
+        {
+            char text_buffer[256];
+            int32_t msg_x_offset = 0;
+
+            switch (display_state)
+            {
+
+            case DisplayState::kBootStatus:
+                //
+                break;
+
+            case DisplayState::kMainStatus:
+                if (wifi::ready)
+                {
+                    //sprintf(text_buffer, "Wi-fi connected\nIP:%s", wifi::ip_address);
+                    if (wifi::is_client_mode)
+                    {
+                        sprintf(text_buffer, "Wifi-Client");
+                    }
+                    else
+                    {
+                        sprintf(text_buffer, "Wifi-AP");
+                    }
+
+                    oled::DrawMessage(text_buffer, 0, msg_x_offset += 7, false, true, true);
+
+                    //sprintf(text_buffer, "%s", wifi::ssid);
+                    //oled::DrawMessage(text_buffer, 0, msg_x_offset+=7, false, true);
+                    sprintf(text_buffer, "IP %s", wifi::ip_address);
+                    oled::DrawMessage(text_buffer, 0, msg_x_offset += 7, false, true, false);
+                }
+                else
+                {
+                    sprintf(text_buffer, "Wi-fi not ready");
+                    oled::DrawMessage(text_buffer, 0, 0, false, true);
+                }
+
+                sprintf(text_buffer, "Current file:\n%s", storage::loaded_file_path);
+                oled::DrawMessage(text_buffer, 0, msg_x_offset += 7, true, true);
+
+                break;
+
+            case DisplayState::kMainMenu:
+                //
+                break;
+
+            case DisplayState::kFileMenu:
+                //
+                break;
+
+            case DisplayState::kWifiMenu:
+                //
+                break;
+
+            case DisplayState::kIdle:
+                //
+                break;
+            }
+
+            msg_x_offset = 0;
         }
 
         void Task_UpdateScreen(void *params)
@@ -42,8 +110,6 @@ namespace esp_sio_dev
             //uint8_t fps_count = 0;
             //uint32_t fps_counter_start = 0;
             //char fps_display[16];
-
-            char text_buffer[256];
 
             while (1)
             {
@@ -60,18 +126,7 @@ namespace esp_sio_dev
 
                 //oled::DrawMessage(fps_display, 0, 0);
 
-                if (wifi::ready)
-                {
-                    sprintf(text_buffer, "Wi-fi connected\nIP:%s", wifi::ip_address);
-                }
-                else
-                {
-                    sprintf(text_buffer, "Wi-fi not ready");
-                }
-                oled::DrawMessage(text_buffer, 0, 0, false, true);
-
-                sprintf(text_buffer, "Current file:\n%s", storage::loaded_file_path);
-                oled::DrawMessage(text_buffer, 0, 14, true, true);
+                DoDisplay();
 
                 oled::DrawBuffer();
 

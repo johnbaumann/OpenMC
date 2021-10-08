@@ -215,8 +215,8 @@ namespace esp_sio_dev
         void ClearBuffer();
         void ClearScreen();
         void DrawBuffer();
-        void DrawChar(uint8_t character, int32_t x_pos, int32_t y_pos, bool clear_bg);
-        void DrawMessage(const char *message, int32_t x_pos, int32_t y_pos, bool auto_wrap, bool clear_bg);
+        void DrawChar(uint8_t character, int32_t x_pos, int32_t y_pos, bool clear_bg = false, bool colors_inverted = false);
+        void DrawMessage(const char *message, int32_t x_pos, int32_t y_pos, bool auto_wrap, bool clear_bg = false, bool colors_inverted = false);
         int32_t GetMessageRenderedWidth(const char *message);
         void Init(void);
         void ResetScreen();

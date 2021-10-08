@@ -32,7 +32,7 @@ namespace esp_sio_dev
 		static esp_err_t SendCommandStream(uint8_t *command_buffer, size_t length);
 		static esp_err_t SendSingleCommand(uint8_t command);
 
-		void DrawChar(uint8_t character, int32_t x_pos, int32_t y_pos, bool clear_bg = false)
+		void DrawChar(uint8_t character, int32_t x_pos, int32_t y_pos, bool clear_bg, bool colors_inverted)
 		{
 			uint16_t glyph_index;
 
@@ -58,14 +58,32 @@ namespace esp_sio_dev
 						continue;
 
 					if (clear_bg)
-						display_buffer[(_y * DISPLAY_WIDTH) + _x] = ((font_6x6[glyph_index + byte_index] >> bit) & 0x01);
+					{
+						if (colors_inverted)
+						{
+							display_buffer[(_y * DISPLAY_WIDTH) + _x] = !((font_6x6[glyph_index + byte_index] >> bit) & 0x01);
+						}
+						else
+						{
+							display_buffer[(_y * DISPLAY_WIDTH) + _x] = ((font_6x6[glyph_index + byte_index] >> bit) & 0x01);
+						}
+					}
 					else
-						display_buffer[(_y * DISPLAY_WIDTH) + _x] |= ((font_6x6[glyph_index + byte_index] >> bit) & 0x01);
+					{
+						if (colors_inverted)
+						{
+							display_buffer[(_y * DISPLAY_WIDTH) + _x] |= !((font_6x6[glyph_index + byte_index] >> bit) & 0x01);
+						}
+						else
+						{
+							display_buffer[(_y * DISPLAY_WIDTH) + _x] |= ((font_6x6[glyph_index + byte_index] >> bit) & 0x01);
+						}
+					}
 				}
 			}
 		}
 
-		void DrawMessage(const char *message, int32_t x_pos, int32_t y_pos, bool auto_wrap, bool clear_bg = false)
+		void DrawMessage(const char *message, int32_t x_pos, int32_t y_pos, bool auto_wrap, bool clear_bg, bool colors_inverted)
 		{
 			int32_t _y = y_pos;
 			int32_t _x = x_pos;
@@ -85,12 +103,18 @@ namespace esp_sio_dev
 					_x = x_pos;
 				}
 
-				DrawChar(message[i], _x, _y, clear_bg);
+				DrawChar(message[i], _x, _y, clear_bg, colors_inverted);
 				_x += (GLYPH_WIDTH + 1);
 			}
 		}
 
 		int32_t GetMessageRenderedWidth(const char *message)
+		{
+			uint16_t message_len = strlen(message);
+			return (message_len * 6) + (1 * message_len);
+		}
+
+		int32_t GetMessageRenderedWidth(const char *message, int32_t x_pos, int32_t y_pos, bool auto_wrap)
 		{
 			uint16_t message_len = strlen(message);
 			return (message_len * 6) + (1 * message_len);

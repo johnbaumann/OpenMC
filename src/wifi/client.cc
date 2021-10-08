@@ -40,6 +40,7 @@ namespace esp_sio_dev
 
             static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
             {
+                wifi_config_t wifi_config;
                 if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
                 {
                     esp_wifi_connect();
@@ -63,6 +64,12 @@ namespace esp_sio_dev
                     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
                     ESP_LOGI(kLogPrefix, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
                     sprintf(wifi::ip_address, IPSTR, IP2STR(&event->ip_info.ip));
+                    if(esp_wifi_get_config(WIFI_IF_STA, &wifi_config) == ESP_OK)
+                    {
+                        strcpy((char*)&wifi::ssid, (char*)&wifi_config.sta.ssid);
+                    }
+                    wifi::is_client_mode = true;
+                    
                     s_retry_num = 0;
                     xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
                 }

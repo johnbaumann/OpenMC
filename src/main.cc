@@ -29,7 +29,11 @@
 
 // Task sizes - there should be approximately 5% free space to allow for growth
 //#define FILE_WRITE_TASK_SIZE 1760
+#define GUI_TASK_SIZE 2048
+#define TOUCH_INPUT_TASK_SIZE 2048
 #define FILE_WRITE_TASK_SIZE 3096
+
+#define STARTUP_DELAY_MS 500
 
 // rama
 // sickle <3
@@ -67,17 +71,16 @@ namespace esp_sio_dev
         // To allow voltage levels to stabilize
         gpio_set_direction(kOLEDPin_Backlight, GPIO_MODE_OUTPUT);
         gpio_set_level(kOLEDPin_Backlight, 1);
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        vTaskDelay(STARTUP_DELAY_MS / portTICK_PERIOD_MS);
         gpio_set_level(kOLEDPin_Backlight, 0);
 
         oled::Init(); // Init oled screen
-
-        xTaskCreatePinnedToCore(gui::Task_UpdateScreen, "screen_update_task_core_0", 2048, NULL, 0, NULL, 0);
+        xTaskCreatePinnedToCore(gui::Task_UpdateScreen, "screen_update_task_core_0", GUI_TASK_SIZE, NULL, 0, NULL, 0);
 
         touch_input::SetCallback_Left(gui::Callback_Left);
         touch_input::SetCallback_Confirm(gui::Callback_Confirm);
         touch_input::SetCallback_Right(gui::Callback_Right);
-        xTaskCreatePinnedToCore(touch_input::Task_TouchInput, "touch_pad_input_task_core_0", 2048, NULL, 0, NULL, 0);
+        xTaskCreatePinnedToCore(touch_input::Task_TouchInput, "touch_pad_input_task_core_0", TOUCH_INPUT_TASK_SIZE, NULL, 0, NULL, 0);
 
         storage::Init();
 
@@ -96,11 +99,11 @@ namespace esp_sio_dev
         start_app_cpu();
 
         // if client settings found do this
-        wifi::client::Init();
+        //wifi::client::Init();
 
         // if no settings found, start access point mode
         // Enable wifi scan mode, add option for wifi config from web server
-        //wifi::access_point::Init();
+        wifi::access_point::Init();
 
         while (wifi::ready == false || storage::ready == false)
         {

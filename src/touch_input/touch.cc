@@ -12,6 +12,10 @@
 #define TOUCH_FILTER_MODE_EN (1)
 #define TOUCHPAD_FILTER_TOUCH_PERIOD (10)
 
+// Initial values, consider making these adjustable through config
+#define TOUCH_DEFAULT_MIN 300
+#define TOUCH_DEFAULT_MAX 400
+
 namespace esp_sio_dev
 {
     namespace touch_input
@@ -44,6 +48,23 @@ namespace esp_sio_dev
         void SetCallback_Right(TouchCallback_t callback)
         {
             callback_right = callback;
+        }
+
+        static void InitTouch(void)
+        {
+            // Initialize touch pad peripheral.
+            // The default fsm mode is software trigger mode.
+            ESP_ERROR_CHECK(touch_pad_init());
+
+            touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_1V);
+            for (int i = 0; i < 3; i++)
+            {
+                touch_pad_config(touch_pads[i], TOUCH_THRESH_NO_USE);
+                touch_calibration[i].minimum = TOUCH_DEFAULT_MIN;
+                touch_calibration[i].maximum = TOUCH_DEFAULT_MAX;
+                touch_calibration[i].value = TOUCH_DEFAULT_MAX;
+                touch_calibration[i].threshold = ((touch_calibration[i].maximum - touch_calibration[i].minimum) / 2) + touch_calibration[i].minimum;
+            }
         }
 
         static void ReadTouchValues(void)
@@ -85,15 +106,7 @@ namespace esp_sio_dev
 
         void Task_TouchInput(void *pvParameter)
         {
-            // Initialize touch pad peripheral.
-            // The default fsm mode is software trigger mode.
-            ESP_ERROR_CHECK(touch_pad_init());
-
-            touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_1V);
-            for (int i = 4; i <= 6; i++)
-            {
-                touch_pad_config((touch_pad_t)i, TOUCH_THRESH_NO_USE);
-            }
+            InitTouch();
 
             while (1)
             {
