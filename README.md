@@ -1,6 +1,6 @@
 # ESP-SIO-DEV
 
-**PROJECT IS A WORK IN PROGRESS, PIN ASSIGNMENTS MAY CHANGE**
+**PROJECT IS A WORK IN PROGRESS, PIN ASSIGNMENTS MAY CHANGE**  
 *Pins last changed in commit on August 15th 2021*
 
 ## So what is it ?
