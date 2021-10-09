@@ -8,6 +8,10 @@
 This project uses an ESP32 connected to a SDHC sdcard to emulate a PSX memory card. The ESP's Wifi capabilities can be used to upload memory card images via a basic web interface.
 An optional oled screen can be connected to display some informations.
 
+### PCB in the works
+
+A PCB is in the works that will rely on Heltec's Wifi Kit 32 and a few additional components and will connect to the console via the memory card port.
+
 # Software setup
 
 1. Follow this guide to setup the ESP-IDF SDK : [https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html)  
@@ -174,8 +178,10 @@ const gpio_num_t kOLEDPin_SCL = GPIO_NUM_22;       // Serial Clock
 
 The ESP is connected to the PSX via a memory card/pad port, either via a salvaged memory card motherboard or a butchered PSX pad cable.
 
-![PSX pad pinout](./images/ps2-controller-pinout.png)  
+![Pad to esp](./images/pad-esp.jpg)  
 ![Memcard header](./images/mc-hdr.jpg)  
+
+![PSX pad pinout](./images/ps2-controller-pinout.png)  
 
 | ESP32 gpio | PSX SIO pin |
 |--------------|------------|
