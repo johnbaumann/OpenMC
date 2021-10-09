@@ -91,7 +91,7 @@ From there, you can browse the content of the filesystem and upload new files it
 ![SDcard adapter](./images/sdcard-adapter.jpg)  
 ![ESP32 to SDHC](./images/sd-card.png)  
 
-| SD card pins | ESP32 gpio | Pull-up Resistor |
+| SD card pins | ESP32 gpio | [Pull-up Resistor](https://docs.espressif.com/projects/esp-idf/en/v4.3.1/esp32/api-reference/peripherals/sd_pullup_requirements.html#sd-pull-up-requirements) |
 |--------------|------------|------------|
 | 1 CS | GPIO 5 |
 | 2 DI | GPIO 23 / MOSI | 10K to 4 VDD
