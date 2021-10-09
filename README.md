@@ -20,8 +20,11 @@ You can check the serial monitor to make sure the boot process is correct using 
 
 ## Common errors
 
-  * Certificate error at compilation time : [certificate Error : https://github.com/espressif/esp-idf/issues/5322#issuecomment-935331910](certificate Error : https://github.com/espressif/esp-idf/issues/5322#issuecomment-935331910)  
-  * Message about frequency mismatch (26Mhz vs 40Mhz) : Change XTAL frequency with `idf.py menuconfig` : *Component config –> ESP32-specific –> Main XTAL frequency to 40 Mhz* or set `CONFIG_ESP32_XTAL_FREQ_40=y` in the project's `sdkconfig` file.
+  * Certificate error at compilation time : [https://github.com/espressif/esp-idf/issues/5322#issuecomment-935331910](https://github.com/espressif/esp-idf/issues/5322#issuecomment-935331910)  
+  * Message about frequency mismatch (26Mhz vs 40Mhz) :  
+  Change XTAL frequency with `idf.py menuconfig` :  
+  *Component config –> ESP32-specific –> Main XTAL frequency to 40 Mhz*  
+  or set `CONFIG_ESP32_XTAL_FREQ_40=y` in the project's `sdkconfig` file.
 
 ## Wifi :
 
@@ -49,7 +52,7 @@ wifi::client::Init();
 
 If no SD card is found, the [spiffs](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/spiffs.html) filesystem is used.
 
-It should be noted that the spiffs filesystem has a 31 characters limitation for the whole filepath, something to bin mindfull of when uploading files via the web interface.
+It should be noted that the spiffs filesystem has a 31 characters limitation for the whole filepath, something to be mindfull of when uploading files via the web interface.
 
 sources : https://discord.com/channels/642647820683444236/642848627823345684/895115268253179904
 
@@ -78,7 +81,7 @@ From there, you can browse the content of the filesystem and upload new files it
 
 ## Needed hardware 
 
-  * A PSX with a serial port
+  * A PSX
   * An ESP32 board (e.g : Heltec's Wifi kit 32, Nodemcu ESP32S V.1.1, etc. )
   * An SDHC sd card + SD card adapter
   * A 0.96" oled SPI screen (e.g : SD1306)
@@ -103,6 +106,8 @@ From there, you can browse the content of the filesystem and upload new files it
 SD card pinout : [https://pinouts.ru/Memory/sdcard_pinout.shtml](https://pinouts.ru/Memory/sdcard_pinout.shtml)  
 
 ### Connecting the ESP to the oled
+
+![Heltec Oled pinout](./images/esp32oled.png)
 
 | ESP32 gpio | OLED pin |
 |--------------|------------|
@@ -148,7 +153,7 @@ in `src/main.cc`, l. 72 to 75 :
 
 #### Nodemcu ESP32S 1.1 pins
 
-If using the ![Nodemcu ESP32S 1.1](./images/nodemcu11-esp32s.jpeg) devkit, you should use those pins :
+If using the [Nodemcu ESP32S 1.1](./images/nodemcu11-esp32s.jpeg) devkit, you should use those pins :
 
 | ESP32S gpio | OLED pin |
 |--------------|------------|
@@ -167,7 +172,9 @@ const gpio_num_t kOLEDPin_SCL = GPIO_NUM_22;       // Serial Clock
 
 ### Connecting the ESP to the Playstation
 
-You need to have a [serial port (SIO)](https://en.wikipedia.org/wiki/PlayStation_models#Comparison_of_models) on your PSX, and either use a [scph-1040](https://en.wikipedia.org/wiki/PlayStation_Link_Cable) serial cable or solder directly to the psx motherboard. See the "From the PSX to the controller" section [here for some solutions](https://unirom.github.io/serial_psx_cable).
+The ESP is connected to the PSX via a memory card/pad port, either via a salvaged memory card motherboard or a butchered PSX pad cable.
+
+![PSX pad pinout](./images/ps2-controller-pinout.png)
 
 | ESP32 gpio | PSX SIO pin |
 |--------------|------------|
@@ -175,6 +182,18 @@ You need to have a [serial port (SIO)](https://en.wikipedia.org/wiki/PlayStation
 | 34  |  2 CMND |
 | 35  |  6 ATT  |
 | 39  |  7 CLK  |
-| 33  |  8 ACK  |
+| 33  |  9 ACK  |
 
-PSX SIO pinout : [https://psx-spx.consoledev.net/pinouts/#pinouts-sio-pinouts](https://psx-spx.consoledev.net/pinouts/#pinouts-sio-pinouts)  
+**Be mindful that ACK is pin 9 on both the memory card and pad ports, but ACK is the 8th pin of the memory card port whereas it is the 9th pin of the pad slot.**
+```
+_________________________
+|       |       |       |
+| 9 7 6 | 5 4 3 |  2 1  | CARD
+|_______|_______|_______|
+ _______________________
+|       |       |       |
+| 9 8 7 | 6 5 4 | 3 2 1 | PAD
+ \______|_______|______/
+```
+
+PSX SIO pinout : [https://psx-spx.consoledev.net/pinouts/#pinouts-controller-ports-and-memory-card-ports](https://psx-spx.consoledev.net/pinouts/#pinouts-controller-ports-and-memory-card-ports)  
