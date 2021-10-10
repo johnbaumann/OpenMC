@@ -187,6 +187,7 @@ The ESP is connected to the PSX via a memory card/pad port, either via a salvage
 |--------------|------------|
 | 32  |  1 DATA |
 | 34  |  2 CMND |
+| GND  |  4 GND |
 | 35  |  6 ATT  |
 | 39  |  7 CLK  |
 | 33  |  9 ACK  |
