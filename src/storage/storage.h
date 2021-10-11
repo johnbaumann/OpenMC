@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#define MAX_WRITE_FAILURES 4
+#define MAX_WRITE_FAILURES 5
 
 namespace esp_sio_dev
 {

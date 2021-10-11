@@ -6,6 +6,7 @@
 #include "playstation/sio_memory_card.h"
 #include "playstation/spi.h"
 #include "storage/storage.h"
+#include "system/timer.h"
 #include "touch_input/touch.h"
 #include "web/file_server.h"
 #include "wifi/access_point.h"
@@ -33,7 +34,7 @@
 #define TOUCH_INPUT_TASK_SIZE 2048
 #define FILE_WRITE_TASK_SIZE 3096
 
-#define STARTUP_DELAY_MS 500
+//#define STARTUP_DELAY_MS 500
 
 // rama
 // sickle <3
@@ -44,8 +45,6 @@ extern "C"
 {
     void app_main(void);
 }
-
-extern DRAM_ATTR uint8_t output[4];
 
 namespace esp_sio_dev
 {
@@ -64,15 +63,22 @@ namespace esp_sio_dev
         sio::net_yaroze_enabled = false;
 
         // Turn off LED
+        // To-do: Illuminate when card image is uncommitted to storage
         gpio_set_direction(kPin_LED, GPIO_MODE_OUTPUT);
         gpio_set_level(kPin_LED, 0);
         
         // Turn screen backlight off and delay init at power on
         // To allow voltage levels to stabilize
         gpio_set_direction(kOLEDPin_Backlight, GPIO_MODE_OUTPUT);
-        gpio_set_level(kOLEDPin_Backlight, 1);
-        vTaskDelay(STARTUP_DELAY_MS / portTICK_PERIOD_MS);
+
+        // Delay power on
+        /*gpio_set_level(kOLEDPin_Backlight, 1);
+        vTaskDelay(STARTUP_DELAY_MS / portTICK_PERIOD_MS);*/
+
+        // Turn on backlight
         gpio_set_level(kOLEDPin_Backlight, 0);
+
+        system::timer::Init();
 
         oled::Init(); // Init oled screen
         xTaskCreatePinnedToCore(gui::Task_UpdateScreen, "screen_update_task_core_0", GUI_TASK_SIZE, NULL, 0, NULL, 0);

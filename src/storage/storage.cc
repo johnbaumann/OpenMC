@@ -4,6 +4,7 @@
 #include "playstation/sio_memory_card.h"
 #include "storage/sdcard.h"
 #include "storage/spiffs.h"
+#include "system/timer.h"
 
 #include "logging.h"
 
@@ -26,7 +27,6 @@ namespace esp_sio_dev
     {
       uint8_t write_fail_count = 0;
       uint32_t wait_start_time = 0;
-      uint64_t wait_start_tick = 0;
 
       ESP_LOGI(kLogPrefix, "Entering write task loop\n");
       while (1)
@@ -35,16 +35,19 @@ namespace esp_sio_dev
         {
           if (write_fail_count < MAX_WRITE_FAILURES)
           {
-            if (wait_start_time == 0 || wait_start_tick != sio::event_ticks)
+            if (write_fail_count == 0)
             {
               // Using this to watch for total inactivity of SIO traffic
-              wait_start_time = esp_log_timestamp();
-              wait_start_tick = sio::event_ticks;
+              wait_start_time = system::timer::timestamp;
             }
 
             // if wait period in ticks or milliseconds reached, proceed with write
-            if ((sio::event_ticks - sio::memory_card::last_write_tick >= 50) || esp_log_timestamp() - wait_start_time >= 500)
+            // Roughly 60ish event ticks a second on an NTSC system
+            // So in theory this should wait 2 seconds after a write is finished
+            if ((sio::event_ticks - sio::memory_card::last_write_tick >= 120) || system::timer::timestamp - wait_start_time >= 2000)
             {
+              //ESP_LOGI(kLogPrefix, "event_ticks - last_write_tick = %lli\n", (sio::event_ticks - sio::memory_card::last_write_tick));
+              //ESP_LOGI(kLogPrefix, "%lli - %i = %lli", system::timer::timestamp, wait_start_time, system::timer::timestamp - wait_start_time);
               if (WriteFile() != 0)
               {
                 write_fail_count++;
@@ -56,7 +59,6 @@ namespace esp_sio_dev
                 sio::memory_card::committed_to_storage = true;
                 write_fail_count = 0;
                 wait_start_time = 0;
-                wait_start_tick = 0;
               }
             }
             else
@@ -71,7 +73,6 @@ namespace esp_sio_dev
             sio::memory_card::committed_to_storage = true;
             write_fail_count = 0;
             wait_start_time = 0;
-            wait_start_tick = 0;
             ESP_LOGE(kLogPrefix, "Bailed on write!\n");
             //break; // break from inner loop
           }
@@ -172,9 +173,7 @@ namespace esp_sio_dev
       int result;
       FILE *mc_file;
       uint32_t write_end_time;
-      uint32_t write_start_time = esp_log_timestamp();
-
-      //unlink
+      uint32_t write_start_time = system::timer::timestamp;
 
       if(strcmp(loaded_file_path, "") == 0)
       {
@@ -204,7 +203,7 @@ namespace esp_sio_dev
         }
         else
         {
-          write_end_time = esp_log_timestamp();
+          write_end_time = system::timer::timestamp;
           ESP_LOGI(kLogPrefix, "File written in %ims\n", write_end_time - write_start_time);
           result = 0;
         }

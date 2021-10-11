@@ -2,6 +2,7 @@
 
 #include "oled/ssd1306.h"
 #include "storage/storage.h"
+#include "system/timer.h"
 #include "wifi/wifi.h"
 
 #include <esp_log.h>
@@ -9,6 +10,8 @@
 #include <freertos/task.h>
 #include <stdint.h>
 #include <stdio.h>
+
+//#define SHOW_FPS
 
 namespace esp_sio_dev
 {
@@ -19,19 +22,19 @@ namespace esp_sio_dev
 
         void Callback_Left(void)
         {
-            last_input_timestamp = esp_log_timestamp();
+            last_input_timestamp = system::timer::timestamp;
             printf("Callback Left\n");
         }
 
         void Callback_Confirm(void)
         {
-            last_input_timestamp = esp_log_timestamp();
+            last_input_timestamp = system::timer::timestamp;
             printf("Callback Confirm\n");
         }
 
         void Callback_Right(void)
         {
-            last_input_timestamp = esp_log_timestamp();
+            last_input_timestamp = system::timer::timestamp;
             printf("Callback Right\n");
         }
 
@@ -107,33 +110,34 @@ namespace esp_sio_dev
             uint32_t render_start_time = 0;
             uint32_t render_end_time = 0;
 
-            //uint8_t fps_count = 0;
-            //uint32_t fps_counter_start = 0;
-            //char fps_display[16];
+#ifdef SHOW_FPS
+            uint8_t fps_count = 0;
+            uint32_t fps_counter_start = 0;
+            char fps_display[16];
+#endif
 
             while (1)
             {
-                render_start_time = esp_log_timestamp();
+                render_start_time = system::timer::timestamp;
 
                 oled::ClearBuffer();
 
-                // if(render_start_time - fps_counter_start >= 1000)
-                // {
-                //     sprintf(fps_display, "%i fps", fps_count);
-                //     fps_count = 0;
-                //     fps_counter_start = render_end_time;
-                // }
-
-                //oled::DrawMessage(fps_display, 0, 0);
+#ifdef SHOW_FPS
+                if (render_start_time - fps_counter_start >= 1000)
+                {
+                    sprintf(fps_display, "%i fps", fps_count);
+                    fps_count = 0;
+                    fps_counter_start = render_end_time;
+                }
+                oled::DrawMessage(fps_display, 0, 0, false, false, false);
+                fps_count++;
+#endif
 
                 DoDisplay();
 
                 oled::DrawBuffer();
 
-                // fps_count++;
-
-                render_end_time = esp_log_timestamp();
-
+                render_end_time = system::timer::timestamp;
                 time_to_delay = delay_per_frame - (render_end_time - render_start_time);
                 if (time_to_delay > 0)
                 {
