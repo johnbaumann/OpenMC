@@ -179,9 +179,7 @@ const gpio_num_t kOLEDPin_SCL = GPIO_NUM_22;       // Serial Clock
 The ESP is connected to the PSX via a memory card/pad port, either via a salvaged memory card motherboard or a butchered PSX pad cable.
 
 ![Pad to esp](./images/pad-esp.jpg)  
-![Memcard header](./images/mc-hdr.jpg)  
-
-![PSX pad pinout](./images/ps2-controller-pinout.png)  
+![Memcard header](./images/mc-hdr.jpg) ![PSX pad pinout](./images/ps2-controller-pinout.png)  
 
 | ESP32 gpio | PSX SIO pin |
 |--------------|------------|
