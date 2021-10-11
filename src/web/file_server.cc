@@ -607,15 +607,6 @@ namespace esp_sio_dev
 
                 return ESP_OK;
             }
-
-            void Task_StartFileServer(void *params)
-            {
-                ESP_LOGI(TAG, "File server setup task on core %i\n", xPortGetCoreID());
-                ESP_ERROR_CHECK(start_file_server("/sdcard"));
-                ESP_LOGI(TAG, "KILLING file server setup task on core %i\n", xPortGetCoreID());
-                
-                vTaskDelete(NULL); // NULL means "this task"
-            }
         } // file_server
 
     } // web

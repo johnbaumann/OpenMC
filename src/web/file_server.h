@@ -10,7 +10,6 @@ namespace esp_sio_dev
         namespace file_server
         {
             esp_err_t start_file_server(const char *base_path);
-            void Task_StartFileServer(void *params);
         } // file_server
 
     } // web

@@ -11,12 +11,17 @@
 
 #include <stdio.h>
 
+//#define MC_DEBUG
+
 namespace esp_sio_dev
 {
   namespace sio
   {
     namespace memory_card
     {
+#ifdef MC_DEBUG
+      static char debug_string[] = "MC event %2X\n";
+#endif
       uint8_t DRAM_ATTR memory_card_ram[131072] = {};
 
       uint8_t DRAM_ATTR flag = Flags::kDirectoryUnread;
@@ -103,6 +108,9 @@ namespace esp_sio_dev
             data_out = flag;
             // Safe to exit interpret loop
             command_routed = true;
+#ifdef MC_DEBUG
+            ets_printf(debug_string, data_in);
+#endif
             break;
 
           // Last command was MC Access, expecting
@@ -117,6 +125,9 @@ namespace esp_sio_dev
               current_command = data_in;
               // Re-evaluate command
               // command_routed = false;
+#ifdef MC_DEBUG
+              ets_printf(debug_string, data_in);
+#endif
               break;
 
             default:
@@ -124,6 +135,9 @@ namespace esp_sio_dev
               GoIdle();
               // Re-evaluate command
               // command_routed = false;
+#ifdef MC_DEBUG
+              ets_printf(debug_string, data_in);
+#endif
             }
             break;
 
