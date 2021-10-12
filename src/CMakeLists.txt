@@ -1,4 +1,4 @@
-file(GLOB_RECURSE SOURCE_FILES *.c *.cc *.s)
+file(GLOB_RECURSE SOURCE_FILES *.c *.cc *.S)
 idf_component_register(
 	SRCS ${SOURCE_FILES}
     INCLUDE_DIRS .
