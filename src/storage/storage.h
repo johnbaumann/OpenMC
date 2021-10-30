@@ -1,6 +1,7 @@
 #ifndef _STORAGE_H
 #define _STORAGE_H
 
+#include <stdbool.h>
 #include <stdio.h>
 
 #define MAX_WRITE_FAILURES 5
@@ -17,7 +18,7 @@ namespace esp_sio_dev
 
     void Init();
     void Task_Write(void *params);
-    void LoadCardFromFile(char *filepath, void *destination);
+    bool LoadCardFromFile(char *filepath, void *destination);
     int WriteFile();
   } // storage
 } // esp_sio_dev

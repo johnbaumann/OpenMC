@@ -5,6 +5,7 @@
 #include "playstation/sio.h"
 #include "playstation/sio_memory_card.h"
 #include "playstation/spi.h"
+#include "storage/config.h"
 #include "storage/storage.h"
 #include "system/timer.h"
 #include "touch_input/touch.h"
@@ -66,14 +67,14 @@ namespace esp_sio_dev
         // To-do: Illuminate when card image is uncommitted to storage
         gpio_set_direction(kPin_LED, GPIO_MODE_OUTPUT);
         gpio_set_level(kPin_LED, 0);
-        
+
         // Turn screen backlight off and delay init at power on
         // To allow voltage levels to stabilize
         gpio_set_direction(kOLEDPin_Backlight, GPIO_MODE_OUTPUT);
 
         // Delay power on
-        /*gpio_set_level(kOLEDPin_Backlight, 1);
-        vTaskDelay(STARTUP_DELAY_MS / portTICK_PERIOD_MS);*/
+        // gpio_set_level(kOLEDPin_Backlight, 1);
+        // vTaskDelay(STARTUP_DELAY_MS / portTICK_PERIOD_MS);
 
         // Turn on backlight
         gpio_set_level(kOLEDPin_Backlight, 0);
@@ -104,12 +105,29 @@ namespace esp_sio_dev
         core0_stall_init();
         start_app_cpu();
 
-        // if client settings found do this
-        //wifi::client::Init();
+        // Try loading config from /sdcard/config.txt, else load defaults
+        if (storage::config::LoadConfig() == false)
+        {
+            storage::config::LoadDefaultSettings();
+        }
 
-        // if no settings found, start access point mode
-        // Enable wifi scan mode, add option for wifi config from web server
-        wifi::access_point::Init();
+        if(storage::config::settings.wifi_mode == storage::config::kClient)
+        {
+            wifi::client::Init();
+        }
+        else
+        {
+            wifi::access_point::Init();
+        }
+
+        gpio_set_direction(kSDPin_Detect, GPIO_MODE_INPUT);
+        gpio_set_pull_mode(kSDPin_Detect, GPIO_PULLUP_ONLY);
+
+        /*if (gpio_get_level(kSDPin_Detect) == 0)
+            printf("CARD DETECTED\n");
+        else
+            printf("card not present\n");
+        */
 
         while (wifi::ready == false || storage::ready == false)
         {
@@ -117,13 +135,8 @@ namespace esp_sio_dev
         }
 
         ESP_ERROR_CHECK(web::file_server::start_file_server(storage::base_path));
-       
-        //xTaskCreate(tcp_server_task, "tcp_server", 4096, (void *)AF_INET, 5, NULL);
 
-        //ESP_LOGI(kLogPrefix,"Free Heap = %i\n", esp_get_free_heap_size());
-        //ESP_LOGI(kLogPrefix, "Free Internal Heap = %i\n", esp_get_free_internal_heap_size());
         ESP_LOGI(kLogPrefix, "Minimum Free Heap = %i\n", esp_get_minimum_free_heap_size());
-        
     }
 }
 

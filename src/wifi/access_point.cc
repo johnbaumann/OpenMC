@@ -1,6 +1,7 @@
 #include "wifi/access_point.h"
-
 #include "wifi/wifi.h"
+
+#include "storage/config.h"
 #include "web/file_server.h"
 #include "logging.h"
 
@@ -16,9 +17,7 @@
 #include <lwip/err.h>
 #include <lwip/sys.h>
 
-#define EXAMPLE_ESP_WIFI_SSID "esp-sio-dev"
-#define EXAMPLE_ESP_WIFI_PASS "psxdevrulezd00d!"
-#define EXAMPLE_ESP_WIFI_CHANNEL 5
+#define AP_WIFI_CHANNEL 5
 #define EXAMPLE_MAX_STA_CONN 1
 
 namespace esp_sio_dev
@@ -69,17 +68,40 @@ namespace esp_sio_dev
                 ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
                 ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, NULL));
-                wifi_config_t wifi_config = {EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS, strlen(EXAMPLE_ESP_WIFI_SSID), EXAMPLE_ESP_WIFI_CHANNEL, WIFI_AUTH_WPA_WPA2_PSK, 0, EXAMPLE_MAX_STA_CONN, 100, WIFI_CIPHER_TYPE_TKIP_CCMP, false};
-                if (strlen(EXAMPLE_ESP_WIFI_PASS) == 0)
+                /*wifi_config_t wifi_config = {
+                    EXAMPLE_ESP_WIFI_SSID,
+                    EXAMPLE_ESP_WIFI_PASS,
+                    strlen(EXAMPLE_ESP_WIFI_SSID),
+                    AP_WIFI_CHANNEL,
+                    WIFI_AUTH_WPA_WPA2_PSK,
+                    0,
+                    EXAMPLE_MAX_STA_CONN,
+                    100,
+                    WIFI_CIPHER_TYPE_TKIP_CCMP,
+                    false};*/
+
+                wifi_config_t wifi_config;
+
+                memcpy(wifi_config.ap.ssid, storage::config::settings.ssid, sizeof(storage::config::settings.ssid));
+                memcpy(wifi_config.ap.password, storage::config::settings.password, sizeof(storage::config::settings.password));
+
+                wifi_config.ap.channel = AP_WIFI_CHANNEL;
+                if (storage::config::settings.password[0] == '\0')
                 {
                     wifi_config.ap.authmode = WIFI_AUTH_OPEN;
                 }
+                wifi_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
+                wifi_config.ap.ssid_hidden = 0;
+                wifi_config.ap.max_connection = 4;
+                wifi_config.ap.beacon_interval = 100;
+                wifi_config.ap.pairwise_cipher = WIFI_CIPHER_TYPE_TKIP_CCMP;
+                wifi_config.ap.ftm_responder = false;
 
                 ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
                 ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
                 ESP_ERROR_CHECK(esp_wifi_start());
 
-                ESP_LOGI(kLogPrefix, "Init finished. SSID:%s password:%s channel:%d", EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS, EXAMPLE_ESP_WIFI_CHANNEL);
+                ESP_LOGI(kLogPrefix, "Init finished. SSID:%s password:%s channel:%d", storage::config::settings.ssid, storage::config::settings.password, AP_WIFI_CHANNEL);
 
                 wifi::ready = true;
             }

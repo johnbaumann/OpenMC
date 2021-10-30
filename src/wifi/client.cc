@@ -1,7 +1,8 @@
 #include "wifi/client.h"
-
 #include "wifi/wifi.h"
+
 #include "logging.h"
+#include "storage/config.h"
 
 #include <string.h>
 #include <freertos/FreeRTOS.h>
@@ -17,8 +18,6 @@
 #include <lwip/sys.h>
 
 // To-do: Save/load this to SD, WiFi AP for configuration mode?
-#define EXAMPLE_ESP_WIFI_SSID "esp-sio-client"
-#define EXAMPLE_ESP_WIFI_PASS "espdevrulezdude!"
 #define EXAMPLE_ESP_MAXIMUM_RETRY 5
 
 /* The event group allows multiple bits for each event, but we only care about two events:
@@ -64,12 +63,12 @@ namespace esp_sio_dev
                     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
                     ESP_LOGI(kLogPrefix, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
                     sprintf(wifi::ip_address, IPSTR, IP2STR(&event->ip_info.ip));
-                    if(esp_wifi_get_config(WIFI_IF_STA, &wifi_config) == ESP_OK)
+                    if (esp_wifi_get_config(WIFI_IF_STA, &wifi_config) == ESP_OK)
                     {
-                        strcpy((char*)&wifi::ssid, (char*)&wifi_config.sta.ssid);
+                        strcpy((char *)&wifi::ssid, (char *)&wifi_config.sta.ssid);
                     }
                     wifi::is_client_mode = true;
-                    
+
                     s_retry_num = 0;
                     xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
                 }
@@ -102,22 +101,22 @@ namespace esp_sio_dev
                 esp_event_handler_instance_t instance_got_ip;
                 ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, &instance_any_id));
                 ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, &instance_got_ip));
-                wifi_config_t wifi_config = {
-                    .sta = {
-                        EXAMPLE_ESP_WIFI_SSID,
-                        EXAMPLE_ESP_WIFI_PASS,
-                        .scan_method = WIFI_FAST_SCAN,
-                        .bssid_set = 0,
-                        .bssid = {},
-                        .channel = 0,
-                        .listen_interval = 0,
-                        .sort_method = WIFI_CONNECT_AP_BY_SIGNAL,
-                        .threshold = {},
-                        .pmf_cfg = {
-                            true,
-                            false},
-                        .rm_enabled = 1, .btm_enabled = 1, .reserved = 30},
-                };
+
+                wifi_config_t wifi_config;
+
+                memcpy(wifi_config.sta.ssid, storage::config::settings.ssid, sizeof(storage::config::settings.ssid));
+                memcpy(wifi_config.sta.password, storage::config::settings.password, sizeof(storage::config::settings.password));
+                wifi_config.sta.scan_method = WIFI_FAST_SCAN;
+                wifi_config.sta.bssid_set = 0;
+                wifi_config.sta.channel = 0;
+                wifi_config.sta.listen_interval = 0;
+                wifi_config.sta.sort_method = WIFI_CONNECT_AP_BY_SIGNAL;
+                wifi_config.sta.pmf_cfg.capable = true;
+                wifi_config.sta.pmf_cfg.required = false;
+                wifi_config.sta.rm_enabled = 1;
+                wifi_config.sta.btm_enabled = 1;
+                wifi_config.sta.reserved = 30;
+
                 ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
                 ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
                 ESP_ERROR_CHECK(esp_wifi_start());
@@ -132,13 +131,13 @@ namespace esp_sio_dev
                 // happened.
                 if (bits & WIFI_CONNECTED_BIT)
                 {
-                    ESP_LOGI(kLogPrefix, "connected to ap SSID:%s", EXAMPLE_ESP_WIFI_SSID);
+                    ESP_LOGI(kLogPrefix, "connected to ap SSID:%s", wifi_config.sta.ssid);
 
                     wifi::ready = true;
                 }
                 else if (bits & WIFI_FAIL_BIT)
                 {
-                    ESP_LOGI(kLogPrefix, "Failed to connect to SSID:%s", EXAMPLE_ESP_WIFI_SSID);
+                    ESP_LOGI(kLogPrefix, "Failed to connect to SSID:%s", wifi_config.sta.ssid);
                 }
                 else
                 {

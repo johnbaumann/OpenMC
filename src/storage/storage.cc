@@ -102,13 +102,16 @@ namespace esp_sio_dev
 
       // Load default.mc, create file if it doesn't exist.  
       sprintf(loaded_file_path, "%s/default.mc", base_path);
-      LoadCardFromFile(loaded_file_path, sio::memory_card::memory_card_ram);
+      if(!LoadCardFromFile(loaded_file_path, sio::memory_card::memory_card_ram))
+      {
+        sio::memory_card::committed_to_storage = false;
+      }
 
       // Mount successful
       storage::ready = true;
     }
 
-    void LoadCardFromFile(char *filepath, void *destination)
+    bool LoadCardFromFile(char *filepath, void *destination)
     {
       FILE *mc_file;
       bool old_mc_status = sio::memory_card_enabled;
@@ -124,7 +127,7 @@ namespace esp_sio_dev
       {
         ESP_LOGE(kLogPrefix, "Error opening file!\n");
         sio::memory_card_enabled = old_mc_status;
-        return;
+        return false;
       }
       else
       {
@@ -135,7 +138,7 @@ namespace esp_sio_dev
           ESP_LOGE(kLogPrefix, "File is empty\n");
           fclose(mc_file);
           sio::memory_card_enabled = old_mc_status;
-          return;
+          return false;
         }
 
         rewind(mc_file);
@@ -145,7 +148,7 @@ namespace esp_sio_dev
           ESP_LOGE(kLogPrefix, "Invalid File size!\n");
           fclose(mc_file);
           sio::memory_card_enabled = old_mc_status;
-          return;
+          return false;
         }
 
         fread(dest, 1, file_size, mc_file);
@@ -166,6 +169,8 @@ namespace esp_sio_dev
       // We need to miss at least one status check to initiate a proper refresh in bios.
       vTaskDelay(1337 / portTICK_PERIOD_MS);
       sio::memory_card_enabled = old_mc_status;
+
+      return true;
     }
 
     int WriteFile()

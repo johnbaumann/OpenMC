@@ -32,29 +32,22 @@ You can check the serial monitor to make sure the boot process is correct using 
 
 ## Wifi :
 
-The default mode is Wifi client and the SSID and PSK settings are currently hardcoded. To connect to your wifi network, adapt the lines 20 and 21 in `src>wifi>client.cc` :
+The default mode is Wifi Access Point.
+The Wifi mode, SSID, and PSK settings can be loaded from the SD card via config.txt in the root directory.
 
-```c
-#define EXAMPLE_ESP_WIFI_SSID "esp-sio-client"
-#define EXAMPLE_ESP_WIFI_PASS "espdevrulezdude!"
-```
+## Configuration :
 
-### AP mode
-
-You can also put it in wifi AP mode by commenting out l.102 and uncommenting l. 106 in `main.cc` :
-
-```c
-// if client settings found do this
-wifi::client::Init();
-
-// if no settings found, start access point mode
-// Enable wifi scan mode, add option for wifi config from web server
-//wifi::access_point::Init();
-```
+An example config.txt is included in this repository.
+Three settings are required to be considered a valid config: mode, ssid, and password
+Valid settings for mode: ap, client
+ssid should be between 1-32 characters
+password should be either 0 characters(leave blank for open auth), or a password 7-63 characters long
+PSK 64 digit hex passwords are not currently supported
 
 ## SD card : 
 
 If no SD card is found, the [spiffs](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/spiffs.html) filesystem is used.
+Notice: spiffs is quite unreliable and will soon be removed from the codebase
 
 It should be noted that the spiffs filesystem has a 31 characters limitation for the whole filepath, something to be mindfull of when uploading files via the web interface.
 
@@ -64,11 +57,10 @@ The default .mc file is currently hardcoded :
 
 ```c
 sprintf(loaded_file_path, "%s/default.mc", base_path);
-LoadCardFromFile(loaded_file_path, sio::memory_card::memory_card_ram);
 ```  
-[https://github.com/johnbaumann/esp-sio-dev/blob/7841e5fc27d4c3c45620d9c0454798e0f8cd3935/src/storage/storage.cc#L102](https://github.com/johnbaumann/esp-sio-dev/blob/7841e5fc27d4c3c45620d9c0454798e0f8cd3935/src/storage/storage.cc#L102)
+[https://github.com/johnbaumann/esp-sio-dev/blob/master/src/storage/storage.cc#L104](https://github.com/johnbaumann/esp-sio-dev/blob/master/src/storage/storage.cc#L104)
 
-### SPIFFS filesystem 
+### SPIFFS filesystem - discontinuing
 
 https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/spiffs.html
 

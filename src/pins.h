@@ -27,10 +27,11 @@ const uint8_t kTOUCH_Right_Bitmask = (1 << 0);
 // Touch Input
 
 // SD Card
-const gpio_num_t kSDPin_CS = GPIO_NUM_5;    // Chip Select - IN / CD
-const gpio_num_t kSDPin_CLK = GPIO_NUM_18;  // Clock - OUT / SCK
-const gpio_num_t kSDPin_MISO = GPIO_NUM_19; // Master In Slave Out - IN / D0
-const gpio_num_t kSDPin_MOSI = GPIO_NUM_23; // Master Out Slave In - OUT / CMD
+const gpio_num_t kSDPin_Detect = GPIO_NUM_2; // Card Detect / CD
+const gpio_num_t kSDPin_CS = GPIO_NUM_5;     // Chip Select - IN / D3
+const gpio_num_t kSDPin_CLK = GPIO_NUM_18;   // Clock - OUT / SCK
+const gpio_num_t kSDPin_MISO = GPIO_NUM_19;  // Master In Slave Out - IN / D0
+const gpio_num_t kSDPin_MOSI = GPIO_NUM_23;  // Master Out Slave In - OUT / CMD
 // SD Card
 
 // Playstation

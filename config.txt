@@ -1,0 +1,11 @@
+# MC config file
+# Modify as desired and copy to SD card
+# Required settings: mode, ssid, password
+# Valid settings for mode: ap, client
+# ssid should be between 1-32 characters
+# password should be either 0 characters(leave blank for open auth), or a password 7-63 characters long
+# PSK 64 digit hex passwords are not currently supported
+mode=ap
+ssid=esp-sio-client
+password=espdevrulezdude!
+default
