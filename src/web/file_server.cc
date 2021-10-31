@@ -38,6 +38,9 @@
 /* Scratch buffer size */
 #define SCRATCH_BUFSIZE 8192
 
+#define IS_FILE_EXT(filename, ext) \
+    (strcasecmp(&filename[strlen(filename) - sizeof(ext) + 1], ext) == 0)
+
 namespace esp_sio_dev
 {
     namespace web
@@ -54,7 +57,6 @@ namespace esp_sio_dev
             };
 
             static const char *TAG = "file_server";
-
 
             // Handler to redirect incoming GET request for /index.html to
             // This can be overridden by uploading file with same name
@@ -86,23 +88,35 @@ namespace esp_sio_dev
             static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
             {
                 char entrypath[FILE_PATH_MAX];
+                char temp_dirpath[FILE_PATH_MAX];
                 char entrysize[16];
                 const char *entrytype;
 
                 struct dirent *entry;
                 struct stat entry_stat;
 
-                DIR *dir = opendir(dirpath);
-                const size_t dirpath_len = strlen(dirpath);
+                DIR *dir;
+                size_t dirpath_len;
 
                 // Retrieve the base path of file storage to construct the full path
                 strlcpy(entrypath, dirpath, sizeof(entrypath));
+                strlcpy(temp_dirpath, entrypath, sizeof(temp_dirpath));
+
+                // Remove trailing slash or directory will fail to open
+                if (temp_dirpath[strlen(temp_dirpath) - 1] == '/')
+                {
+                    temp_dirpath[strlen(temp_dirpath) - 1] = '\0';
+                }
+                dir = opendir(temp_dirpath);
+
+                dirpath_len = strlen(entrypath);
 
                 if (!dir)
                 {
-                    ESP_LOGE(TAG, "Failed to stat dir : %s", dirpath);
+                    ESP_LOGE(TAG, "Failed to stat dir : %s", temp_dirpath);
                     /* Respond with 404 Not Found */
                     httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Directory does not exist");
+                    ESP_LOGE(kLogPrefix, "Failed to check dir %s\n", temp_dirpath);
                     return ESP_FAIL;
                 }
 
@@ -117,6 +131,9 @@ namespace esp_sio_dev
                 /* Add file upload form and script which on execution sends a POST request to /upload */
                 httpd_resp_send_chunk(req, (const char *)upload_script_start, upload_script_size);
 
+                // Send a shortcut to navigate up a directory
+                httpd_resp_sendstr_chunk(req, "<a href=\"../\">Up to higher level directory</a><br>\n");
+
                 /* Send file-list table definition and column labels */
                 httpd_resp_sendstr_chunk(req,
                                          "<table class=\"fixed\" border=\"1\">"
@@ -127,9 +144,30 @@ namespace esp_sio_dev
                 /* Iterate over all files / folders and fetch their names and sizes */
                 while ((entry = readdir(dir)) != NULL)
                 {
-                    entrytype = (entry->d_type == DT_DIR ? "directory" : "file");
+                    // Ignore these stupid folders created by Windows
+                    if (strcmp(entry->d_name, "System Volume Information") == 0 && entry->d_type == DT_DIR)
+                    {
+                        continue;
+                    }
+
+                    if (entry->d_type == DT_DIR)
+                    {
+                        entrytype = "Directory";
+                    }
+                    else
+                    {
+                        if (IS_FILE_EXT(entry->d_name, ".mc") || IS_FILE_EXT(entry->d_name, ".mcd") || IS_FILE_EXT(entry->d_name, ".mcr"))
+                        {
+                            entrytype = "Memory Card Image";
+                        }
+                        else
+                        {
+                            entrytype = "File";
+                        }
+                    }
 
                     strlcpy(entrypath + dirpath_len, entry->d_name, sizeof(entrypath) - dirpath_len);
+                    ESP_LOGI(kLogPrefix, "entrypath = %s\n", entrypath);
                     if (stat(entrypath, &entry_stat) == -1)
                     {
                         ESP_LOGE(TAG, "Failed to stat %s : %s", entrytype, entry->d_name);
@@ -153,16 +191,22 @@ namespace esp_sio_dev
                     httpd_resp_sendstr_chunk(req, "</td><td>");
                     httpd_resp_sendstr_chunk(req, entrysize);
                     httpd_resp_sendstr_chunk(req, "</td><td>");
-                    httpd_resp_sendstr_chunk(req, "<form method=\"post\" action=\"/delete");
-                    httpd_resp_sendstr_chunk(req, req->uri);
-                    httpd_resp_sendstr_chunk(req, entry->d_name);
-                    httpd_resp_sendstr_chunk(req, "\"><button type=\"submit\">Delete</button></form>");
+                    if (entry->d_type != DT_DIR)
+                    {
+                        httpd_resp_sendstr_chunk(req, "<form method=\"post\" action=\"/delete");
+                        httpd_resp_sendstr_chunk(req, req->uri);
+                        httpd_resp_sendstr_chunk(req, entry->d_name);
+                        httpd_resp_sendstr_chunk(req, "\"><button type=\"submit\">Delete</button></form>");
+                    }
+
                     httpd_resp_sendstr_chunk(req, "</td><td>");
-                    httpd_resp_sendstr_chunk(req, "<form method=\"post\" action=\"/mount");
-                    httpd_resp_sendstr_chunk(req, req->uri);
-                    httpd_resp_sendstr_chunk(req, "/");
-                    httpd_resp_sendstr_chunk(req, entry->d_name);
-                    httpd_resp_sendstr_chunk(req, "\"><button type=\"submit\">Mount</button></form>");
+                    if ((IS_FILE_EXT(entry->d_name, ".mc") || IS_FILE_EXT(entry->d_name, ".mcd") || IS_FILE_EXT(entry->d_name, ".mcr")) && entry->d_type != DT_DIR)
+                    {
+                        httpd_resp_sendstr_chunk(req, "<form method=\"post\" action=\"/mount");
+                        httpd_resp_sendstr_chunk(req, req->uri);
+                        httpd_resp_sendstr_chunk(req, entry->d_name);
+                        httpd_resp_sendstr_chunk(req, "\"><button type=\"submit\">Mount</button></form>");
+                    }
                     httpd_resp_sendstr_chunk(req, "</td></tr>\n");
                 }
                 closedir(dir);
@@ -175,12 +219,9 @@ namespace esp_sio_dev
 
                 /* Send empty chunk to signal HTTP response completion */
                 httpd_resp_sendstr_chunk(req, NULL);
-                
+
                 return ESP_OK;
             }
-
-#define IS_FILE_EXT(filename, ext) \
-    (strcasecmp(&filename[strlen(filename) - sizeof(ext) + 1], ext) == 0)
 
             /* Set HTTP response content type according to file extension */
             static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filename)
@@ -322,9 +363,6 @@ namespace esp_sio_dev
                 ESP_LOGI(TAG, "File sending complete");
 
                 /* Respond with an empty chunk to signal HTTP response completion */
-#ifdef CONFIG_EXAMPLE_HTTPD_CONN_CLOSE_HEADER
-                httpd_resp_set_hdr(req, "Connection", "close");
-#endif
                 httpd_resp_send_chunk(req, NULL, 0);
                 return ESP_OK;
             }
@@ -335,6 +373,9 @@ namespace esp_sio_dev
                 char filepath[FILE_PATH_MAX];
                 FILE *fd = NULL;
                 struct stat file_stat;
+
+                char redirect_path[FILE_PATH_MAX];
+                char *end_of_redirect_path;
 
                 /* Skip leading "/upload" from URI to get filename */
                 /* Note sizeof() counts NULL termination hence the -1 */
@@ -441,12 +482,16 @@ namespace esp_sio_dev
                 fclose(fd);
                 ESP_LOGI(TAG, "File reception complete");
 
-                /* Redirect onto root to see the updated file list */
+                strlcpy(redirect_path, filename, sizeof(redirect_path));
+                end_of_redirect_path = strrchr(redirect_path, '/');
+                if (end_of_redirect_path)
+                {
+                    end_of_redirect_path[1] = '\0';
+                }
+
+                // Redirect onto root to see the updated file list
                 httpd_resp_set_status(req, "303 See Other");
-                httpd_resp_set_hdr(req, "Location", "/");
-#ifdef CONFIG_EXAMPLE_HTTPD_CONN_CLOSE_HEADER
-                httpd_resp_set_hdr(req, "Connection", "close");
-#endif
+                httpd_resp_set_hdr(req, "Location", redirect_path);
                 httpd_resp_sendstr(req, "File uploaded successfully");
                 return ESP_OK;
             }
@@ -455,6 +500,8 @@ namespace esp_sio_dev
             static esp_err_t delete_post_handler(httpd_req_t *req)
             {
                 char filepath[FILE_PATH_MAX];
+                char redirect_path[FILE_PATH_MAX];
+                char *end_of_redirect_path;
                 struct stat file_stat;
 
                 /* Skip leading "/delete" from URI to get filename */
@@ -479,21 +526,25 @@ namespace esp_sio_dev
                 if (stat(filepath, &file_stat) == -1)
                 {
                     ESP_LOGE(TAG, "File does not exist : %s", filename);
-                    /* Respond with 400 Bad Request */
+                    // Respond with 400 Bad Request
                     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "File does not exist");
                     return ESP_FAIL;
                 }
 
                 ESP_LOGI(TAG, "Deleting file : %s", filename);
-                /* Delete file */
+                // Delete file
                 unlink(filepath);
 
-                /* Redirect onto root to see the updated file list */
+                strlcpy(redirect_path, filename, sizeof(redirect_path));
+                end_of_redirect_path = strrchr(redirect_path, '/');
+                if (end_of_redirect_path)
+                {
+                    end_of_redirect_path[1] = '\0';
+                }
+
+                // Redirect to directory to see the updated file list
                 httpd_resp_set_status(req, "303 See Other");
-                httpd_resp_set_hdr(req, "Location", "/");
-#ifdef CONFIG_EXAMPLE_HTTPD_CONN_CLOSE_HEADER
-                httpd_resp_set_hdr(req, "Connection", "close");
-#endif
+                httpd_resp_set_hdr(req, "Location", redirect_path);
                 httpd_resp_sendstr(req, "File deleted successfully");
                 return ESP_OK;
             }
@@ -503,16 +554,18 @@ namespace esp_sio_dev
                 char filepath[FILE_PATH_MAX];
                 struct stat file_stat;
 
-                /* Skip leading "/delete" from URI to get filename */
+                /* Skip leading "/mount" from URI to get filename */
                 /* Note sizeof() counts NULL termination hence the -1 */
                 const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
-                                                         req->uri + sizeof("/delete") - 1, sizeof(filepath));
+                                                         req->uri + sizeof("/mount") - 1, sizeof(filepath));
                 if (!filename)
                 {
                     /* Respond with 500 Internal Server Error */
                     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Filename too long");
                     return ESP_FAIL;
                 }
+
+                ESP_LOGI(kLogPrefix, "filename = %s, filepath = %s\n", filename, filepath);
 
                 /* Filename cannot have a trailing '/' */
                 if (filename[strlen(filename) - 1] == '/')
@@ -524,10 +577,11 @@ namespace esp_sio_dev
 
                 if (stat(filepath, &file_stat) == -1)
                 {
-                    ESP_LOGE(TAG, "File does not exist : %s", filename);
+                    ESP_LOGE(TAG, "File does not exist : %s\n", filename);
+                    ESP_LOGE(kLogPrefix, "filename = %s, filepath = %s\n", filename, filepath);
                     /* Respond with 400 Bad Request */
-                    //httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "File does not exist");
-                    //return ESP_FAIL;
+                    httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "File does not exist");
+                    return ESP_FAIL;
                 }
 
                 storage::LoadCardFromFile((char *)filepath, sio::memory_card::memory_card_ram);

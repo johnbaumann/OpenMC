@@ -91,9 +91,6 @@ namespace esp_sio_dev
 
         storage::Init();
 
-        // To-do: Check settings - if no default file specified, load last file. If no previous file, do nothing
-        //storage::LoadCardFromFile((char *)"/sdcard/freeboot.mc", sio::memory_card::memory_card_ram);
-
         // Auto-write task
         xTaskCreatePinnedToCore(storage::Task_Write, "write_task_core_0", FILE_WRITE_TASK_SIZE, NULL, 0, NULL, 0);
 

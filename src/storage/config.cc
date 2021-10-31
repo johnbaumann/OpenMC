@@ -71,12 +71,12 @@ namespace esp_sio_dev
                         line_ending_location = strchr(current_setting_value, '\r');
                         if (line_ending_location != 0)
                         {
-                            line_ending_location[0] = '\0';
+                            *line_ending_location = '\0';
                         }
                         line_ending_location = strchr(current_setting_value, '\n');
                         if (line_ending_location != 0)
                         {
-                            line_ending_location[0] = '\0';
+                            *line_ending_location = '\0';
                         }
 
                         if (strcmp(current_setting_name, "mode") == 0)

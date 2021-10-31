@@ -4,7 +4,6 @@
 #include <driver/gpio.h>
 #include <driver/touch_pad.h>
 
-// To-do: Assign definitions to respective namespaces
 
 // General
 const gpio_num_t kPin_LED = GPIO_NUM_25;
