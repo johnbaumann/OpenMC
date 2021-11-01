@@ -37,7 +37,7 @@ The Wifi mode, SSID, and PSK settings can be loaded from the SD card via config.
 
 ## Configuration :
 
-An example config.txt is included in this repository.
+An example config.txt is included in this repository, modify this and copy to the root directory of your FAT32 formatted SD card.
 Three settings are required to be considered a valid config: mode, ssid, and password
 Valid settings for mode: ap, client
 ssid should be between 1-32 characters
