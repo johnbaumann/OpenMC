@@ -56,7 +56,51 @@ namespace esp_sio_dev
                 char scratch[SCRATCH_BUFSIZE];
             };
 
+            struct URIEncoding
+            {
+                const char Decoded;
+                const char Encoded[4];
+            };
+
             static const char *TAG = "file_server";
+
+            void URLDecode(char *input)
+            {
+                URIEncoding uri_list[20] = {
+                    {' ', "%20"},
+                    {'!', "%21"},
+                    {'#', "%23"},
+                    {'$', "%24"},
+                    {'%', "%25"},
+                    {'&', "%26"},
+                    {'\'', "%27"},
+                    {'(', "%28"},
+                    {')', "%29"},
+                    {'*', "%2A"},
+                    {'+', "%2B"},
+                    {',', "%2C"},
+                    {'/', "%2F"},
+                    {':', "%3A"},
+                    {';', "%3B"},
+                    {'=', "%3D"},
+                    {'?', "%3F"},
+                    {'@', "%40"},
+                    {'[', "%5B"},
+                    {']', "%5D"}};
+
+                char *search;
+
+                for (int y = 0; y < 20; y++)
+                {
+                    search = strstr(input, uri_list[y].Encoded);
+                    while (search != NULL)
+                    {
+                        memmove(search + 1, search + strlen(uri_list[y].Encoded), strlen(input) - strlen(uri_list[y].Encoded) + 1);
+                        search[0] = uri_list[y].Decoded;
+                        search = strstr(input, uri_list[y].Encoded);
+                    }
+                }
+            }
 
             // Handler to redirect incoming GET request for /index.html to
             // This can be overridden by uploading file with same name
@@ -100,6 +144,7 @@ namespace esp_sio_dev
 
                 // Retrieve the base path of file storage to construct the full path
                 strlcpy(entrypath, dirpath, sizeof(entrypath));
+                URLDecode(entrypath);
                 strlcpy(temp_dirpath, entrypath, sizeof(temp_dirpath));
 
                 // Remove trailing slash or directory will fail to open
@@ -107,6 +152,7 @@ namespace esp_sio_dev
                 {
                     temp_dirpath[strlen(temp_dirpath) - 1] = '\0';
                 }
+
                 dir = opendir(temp_dirpath);
 
                 dirpath_len = strlen(entrypath);
@@ -288,6 +334,8 @@ namespace esp_sio_dev
 
                 const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
                                                          req->uri, sizeof(filepath));
+
+                URLDecode(filepath);
                 if (!filename)
                 {
                     ESP_LOGE(TAG, "Filename is too long");
@@ -381,6 +429,7 @@ namespace esp_sio_dev
                 /* Note sizeof() counts NULL termination hence the -1 */
                 const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
                                                          req->uri + sizeof("/upload") - 1, sizeof(filepath));
+                URLDecode(filepath);
                 if (!filename)
                 {
                     /* Respond with 500 Internal Server Error */
@@ -508,6 +557,7 @@ namespace esp_sio_dev
                 /* Note sizeof() counts NULL termination hence the -1 */
                 const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
                                                          req->uri + sizeof("/delete") - 1, sizeof(filepath));
+                URLDecode(filepath);
                 if (!filename)
                 {
                     /* Respond with 500 Internal Server Error */
@@ -558,6 +608,7 @@ namespace esp_sio_dev
                 /* Note sizeof() counts NULL termination hence the -1 */
                 const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
                                                          req->uri + sizeof("/mount") - 1, sizeof(filepath));
+                URLDecode(filepath);
                 if (!filename)
                 {
                     /* Respond with 500 Internal Server Error */
@@ -584,7 +635,7 @@ namespace esp_sio_dev
                     return ESP_FAIL;
                 }
 
-                storage::LoadCardFromFile((char *)filepath, sio::memory_card::memory_card_ram);
+                storage::LoadCardFromFile(filepath, sio::memory_card::memory_card_ram);
                 return ESP_OK;
             }
 
