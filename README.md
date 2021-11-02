@@ -29,6 +29,8 @@ You can check the serial monitor to make sure the boot process is correct using 
   Change XTAL frequency with `idf.py menuconfig` :  
   *Component config –> ESP32-specific –> Main XTAL frequency to 40 Mhz*  
   or set `CONFIG_ESP32_XTAL_FREQ_40=y` in the project's `sdkconfig` file.
+  
+  The filesystem currently only supports ANSI encoded filenames, and the OLED display driver only supports the standard ASCII set.
 
 ## Wifi :
 
