@@ -179,6 +179,9 @@ namespace esp_sio_dev
 
                 // Send a shortcut to navigate up a directory
                 httpd_resp_sendstr_chunk(req, "<a href=\"../\">Up to higher level directory</a><br>\n");
+                httpd_resp_sendstr_chunk(req, "Currently loaded file:");
+                httpd_resp_sendstr_chunk(req, storage::loaded_file_path);
+                httpd_resp_sendstr_chunk(req, "<br>\n");
 
                 /* Send file-list table definition and column labels */
                 httpd_resp_sendstr_chunk(req,
@@ -602,6 +605,8 @@ namespace esp_sio_dev
             static esp_err_t mount_post_handler(httpd_req_t *req)
             {
                 char filepath[FILE_PATH_MAX];
+                char redirect_path[FILE_PATH_MAX];
+                char *end_of_redirect_path;
                 struct stat file_stat;
 
                 /* Skip leading "/mount" from URI to get filename */
@@ -635,7 +640,27 @@ namespace esp_sio_dev
                     return ESP_FAIL;
                 }
 
-                storage::LoadCardFromFile(filepath, sio::memory_card::memory_card_ram);
+                strlcpy(redirect_path, filename, sizeof(redirect_path));
+                end_of_redirect_path = strrchr(redirect_path, '/');
+                if (end_of_redirect_path)
+                {
+                    end_of_redirect_path[1] = '\0';
+                }
+
+                if (storage::LoadCardFromFile(filepath, sio::memory_card::memory_card_ram))
+                {
+                    // Successfully loaded the memory card image from storage
+                    httpd_resp_set_status(req, "303 See Other");
+                    httpd_resp_set_hdr(req, "Location", redirect_path);
+                    httpd_resp_sendstr(req, "File mounted successfully");
+                }
+                else
+                {
+                    // Some failure occurred when loading the file
+                    httpd_resp_set_status(req, "303 See Other");
+                    httpd_resp_set_hdr(req, "Location", redirect_path);
+                    httpd_resp_sendstr(req, "Failed to mount file");
+                }
                 return ESP_OK;
             }
 
