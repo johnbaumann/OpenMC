@@ -77,10 +77,8 @@ namespace esp_sio_dev
                     }
                     else
                     {
-                        if (storage::config::settings.wifi_mode == wifi::Mode::kNone)
-                        {
-                            sprintf(text_buffer, "Wi-fi not ready");
-                        }
+                        // To-do: Grab status from ap/client module, alert to connection failure
+                        sprintf(text_buffer, "Connecting...");
                     }
                     oled::DrawMessage(text_buffer, 0, msg_y_offset += 7, false, true);
                 }
