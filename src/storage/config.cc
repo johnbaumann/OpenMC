@@ -1,5 +1,7 @@
 #include "config.h"
 
+#include "wifi/wifi.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -60,7 +62,7 @@ namespace esp_sio_dev
                             continue;
                         }
                         // Trim string to obtain config var name
-                        strncpy(current_setting_name, current_line, delimiter_location - current_line);
+                        strncpy(strlwr(current_setting_name), current_line, delimiter_location - current_line);
                         current_setting_name[delimiter_location - current_line] = '\0';
 
                         // Trim string to obtain config setting
@@ -81,14 +83,20 @@ namespace esp_sio_dev
 
                         if (strcmp(current_setting_name, "mode") == 0)
                         {
-                            if (strcmp(current_setting_value, "client") == 0)
+                            if (strcmp(strlwr(current_setting_value), "client") == 0)
                             {
-                                temp_settings.wifi_mode = kClient;
+                                temp_settings.wifi_mode = wifi::Mode::kClient;
                                 found_wifi_mode = true;
                             }
-                            else if (strcmp(current_setting_value, "ap") == 0)
+                            else if (strcmp(strlwr(current_setting_value), "ap") == 0)
                             {
-                                temp_settings.wifi_mode = kAcessPoint;
+                                temp_settings.wifi_mode = wifi::Mode::kAcessPoint;
+                                found_wifi_mode = true;
+                            }
+                            
+                            else if (strcmp(strlwr(current_setting_value), "none") == 0)
+                            {
+                                temp_settings.wifi_mode = wifi::Mode::kNone;
                                 found_wifi_mode = true;
                             }
                         }
@@ -112,7 +120,7 @@ namespace esp_sio_dev
                     }
                 }
 
-                if (found_wifi_mode && found_ssid && found_password)
+                if ((found_wifi_mode && found_ssid && found_password) || (found_wifi_mode && temp_settings.wifi_mode == wifi::Mode::kNone))
                 {
                     // Valid configuration file, copy settings
                     settings = temp_settings;
@@ -129,7 +137,7 @@ namespace esp_sio_dev
                 static const uint8_t default_ssid[] = "esp-sio-client";
                 static const uint8_t default_password[] = "espdevrulezdude!";
 
-                settings.wifi_mode = kAcessPoint;
+                settings.wifi_mode = wifi::Mode::kAcessPoint;
                 memcpy(settings.ssid, default_ssid, sizeof(default_ssid));
                 memcpy(settings.password, default_password, sizeof(default_password));
             }

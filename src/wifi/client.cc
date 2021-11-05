@@ -67,7 +67,6 @@ namespace esp_sio_dev
                     {
                         strcpy((char *)&wifi::ssid, (char *)&wifi_config.sta.ssid);
                     }
-                    wifi::is_client_mode = true;
 
                     s_retry_num = 0;
                     xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);

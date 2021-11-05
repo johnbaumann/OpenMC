@@ -108,14 +108,20 @@ namespace esp_sio_dev
             storage::config::LoadDefaultSettings();
         }
 
-        if(storage::config::settings.wifi_mode == storage::config::kClient)
+        gui::display_state = gui::DisplayState::kMainStatus;
+
+        if (storage::config::settings.wifi_mode == wifi::Mode::kClient)
         {
             wifi::client::Init();
         }
-        else
+        else if (storage::config::settings.wifi_mode == wifi::Mode::kAcessPoint)
         {
             wifi::access_point::Init();
         }
+        // else
+        // {
+        //     // Wifi disabled
+        // }
 
         gpio_set_direction(kSDPin_Detect, GPIO_MODE_INPUT);
         gpio_set_pull_mode(kSDPin_Detect, GPIO_PULLUP_ONLY);
@@ -126,12 +132,15 @@ namespace esp_sio_dev
             printf("card not present\n");
         */
 
-        while (wifi::ready == false || storage::ready == false)
+        if (storage::config::settings.wifi_mode == wifi::Mode::kClient || storage::config::settings.wifi_mode == wifi::Mode::kAcessPoint)
         {
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
+            while (wifi::ready == false || storage::ready == false)
+            {
+                vTaskDelay(1000 / portTICK_PERIOD_MS);
+            }
 
-        ESP_ERROR_CHECK(web::file_server::start_file_server(storage::base_path));
+            ESP_ERROR_CHECK(web::file_server::start_file_server(storage::base_path));
+        }
 
         ESP_LOGI(kLogPrefix, "Minimum Free Heap = %i\n", esp_get_minimum_free_heap_size());
     }

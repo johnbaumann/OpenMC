@@ -8,7 +8,6 @@ namespace esp_sio_dev
     namespace wifi
     {
         bool ready = false;
-        bool is_client_mode = false;
         char ip_address[16] = "192.168.4.1";
         uint8_t ssid[32];
     } // wifi

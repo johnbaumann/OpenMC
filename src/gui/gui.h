@@ -22,6 +22,8 @@ namespace esp_sio_dev
         void Callback_Confirm(void);
         void Callback_Right(void);
         void Task_UpdateScreen(void *params);
+
+        extern DisplayState display_state;
     } // gui
 } // esp_sio_dev
 

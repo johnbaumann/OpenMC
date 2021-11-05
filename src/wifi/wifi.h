@@ -8,8 +8,13 @@ namespace esp_sio_dev
 {
     namespace wifi
     {
+        enum Mode : uint8_t
+        {
+            kAcessPoint = 0,
+            kClient = 1,
+            kNone = 2
+        };
         extern bool ready;
-        extern bool is_client_mode;
         extern char ip_address[16];
         extern uint8_t ssid[32];
     } // wifi

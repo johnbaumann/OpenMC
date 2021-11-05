@@ -177,11 +177,12 @@ namespace esp_sio_dev
                 /* Add file upload form and script which on execution sends a POST request to /upload */
                 httpd_resp_send_chunk(req, (const char *)upload_script_start, upload_script_size);
 
+                httpd_resp_sendstr_chunk(req, "<b>Currently loaded file:</b>");
+                httpd_resp_sendstr_chunk(req, storage::loaded_file_path);
+                httpd_resp_sendstr_chunk(req, "<br><br>\n");
+
                 // Send a shortcut to navigate up a directory
                 httpd_resp_sendstr_chunk(req, "<a href=\"../\">Up to higher level directory</a><br>\n");
-                httpd_resp_sendstr_chunk(req, "Currently loaded file:");
-                httpd_resp_sendstr_chunk(req, storage::loaded_file_path);
-                httpd_resp_sendstr_chunk(req, "<br>\n");
 
                 /* Send file-list table definition and column labels */
                 httpd_resp_sendstr_chunk(req,
@@ -216,14 +217,14 @@ namespace esp_sio_dev
                     }
 
                     strlcpy(entrypath + dirpath_len, entry->d_name, sizeof(entrypath) - dirpath_len);
-                    ESP_LOGI(kLogPrefix, "entrypath = %s\n", entrypath);
+                    //ESP_LOGI(kLogPrefix, "entrypath = %s\n", entrypath);
                     if (stat(entrypath, &entry_stat) == -1)
                     {
                         ESP_LOGE(TAG, "Failed to stat %s : %s", entrytype, entry->d_name);
                         continue;
                     }
                     sprintf(entrysize, "%ld", entry_stat.st_size);
-                    ESP_LOGI(TAG, "Found %s : %s (%s bytes)", entrytype, entry->d_name, entrysize);
+                    //ESP_LOGI(TAG, "Found %s : %s (%s bytes)", entrytype, entry->d_name, entrysize);
 
                     /* Send chunk of HTML file containing table entries with file name and size */
                     httpd_resp_sendstr_chunk(req, "<tr><td><a href=\"");
@@ -380,7 +381,7 @@ namespace esp_sio_dev
                     return ESP_FAIL;
                 }
 
-                ESP_LOGI(TAG, "Sending file : %s (%ld bytes)...", filename, file_stat.st_size);
+                //ESP_LOGI(TAG, "Sending file : %s (%ld bytes)...", filename, file_stat.st_size);
                 set_content_type_from_file(req, filename);
 
                 /* Retrieve the pointer to scratch buffer for temporary storage */
@@ -411,7 +412,7 @@ namespace esp_sio_dev
 
                 /* Close file after sending complete */
                 fclose(fd);
-                ESP_LOGI(TAG, "File sending complete");
+                //ESP_LOGI(TAG, "File sending complete");
 
                 /* Respond with an empty chunk to signal HTTP response completion */
                 httpd_resp_send_chunk(req, NULL, 0);
@@ -477,7 +478,7 @@ namespace esp_sio_dev
                     return ESP_FAIL;
                 }
 
-                ESP_LOGI(TAG, "Receiving file : %s...", filename);
+                //ESP_LOGI(TAG, "Receiving file : %s...", filename);
 
                 /* Retrieve the pointer to scratch buffer for temporary storage */
                 char *buf = ((struct file_server_data *)req->user_ctx)->scratch;
@@ -490,7 +491,7 @@ namespace esp_sio_dev
                 while (remaining > 0)
                 {
 
-                    ESP_LOGI(TAG, "Remaining size : %d", remaining);
+                    //ESP_LOGI(TAG, "Remaining size : %d", remaining);
                     /* Receive the file part by part into a buffer */
                     if ((received = httpd_req_recv(req, buf, MIN(remaining, SCRATCH_BUFSIZE))) <= 0)
                     {
@@ -532,7 +533,7 @@ namespace esp_sio_dev
 
                 /* Close file upon upload completion */
                 fclose(fd);
-                ESP_LOGI(TAG, "File reception complete");
+                //ESP_LOGI(TAG, "File reception complete");
 
                 strlcpy(redirect_path, filename, sizeof(redirect_path));
                 end_of_redirect_path = strrchr(redirect_path, '/');
@@ -584,7 +585,7 @@ namespace esp_sio_dev
                     return ESP_FAIL;
                 }
 
-                ESP_LOGI(TAG, "Deleting file : %s", filename);
+                //ESP_LOGI(TAG, "Deleting file : %s", filename);
                 // Delete file
                 unlink(filepath);
 
@@ -621,7 +622,7 @@ namespace esp_sio_dev
                     return ESP_FAIL;
                 }
 
-                ESP_LOGI(kLogPrefix, "filename = %s, filepath = %s\n", filename, filepath);
+                //ESP_LOGI(kLogPrefix, "filename = %s, filepath = %s\n", filename, filepath);
 
                 /* Filename cannot have a trailing '/' */
                 if (filename[strlen(filename) - 1] == '/')
