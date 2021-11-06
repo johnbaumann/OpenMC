@@ -22,32 +22,61 @@ namespace esp_sio_dev
     {
         const touch_pad_t touch_pads[3] = {kTOUCH_Right, kTOUCH_Confirm, kTOUCH_Left};
 
-        TouchCallback_t callback_left;
-        TouchCallback_t callback_confirm;
-        TouchCallback_t callback_right;
+        // Left/Up
+        TouchCallback_t LeftHeld;
+        TouchCallback_t LeftPressed;
 
+        // Confirm/OK
+        TouchCallback_t ConfirmHeld;
+        TouchCallback_t ConfirmPressed;      
+
+        // Right/Down
+        TouchCallback_t RightHeld;
+        TouchCallback_t RightPressed;
+
+        // Holds min/max/trigger values for the touch input
         TouchCalibration touch_calibration[3];
 
+        // Variables for tracking button bitmasks
         uint8_t input_old;
         uint8_t input_held;
         uint8_t input_trig;
 
+        uint64_t left_pressed_timestamp = 0;
+        uint64_t confirm_pressed_timestamp = 0;
+        uint64_t right_pressed_timestamp = 0;
+
         // borrowed some bit operations from https://github.com/fgsfdsfgs/doukutsupsx/blob/master/src/engine/input.c
         // thanks fgsfds
 
-        void SetCallback_Left(TouchCallback_t callback)
+        void SetCallback_LeftHeld(TouchCallback_t callback)
         {
-            callback_left = callback;
+            LeftHeld = callback;
         }
 
-        void SetCallback_Confirm(TouchCallback_t callback)
+        void SetCallback_LeftPressed(TouchCallback_t callback)
         {
-            callback_confirm = callback;
+            LeftPressed = callback;
         }
 
-        void SetCallback_Right(TouchCallback_t callback)
+        void SetCallback_ConfirmHeld(TouchCallback_t callback)
         {
-            callback_right = callback;
+            ConfirmHeld = callback;
+        }
+
+        void SetCallback_ConfirmPressed(TouchCallback_t callback)
+        {
+            ConfirmPressed = callback;
+        }
+
+        void SetCallback_RightHeld(TouchCallback_t callback)
+        {
+            RightHeld = callback;
+        }
+
+        void SetCallback_RightPressed(TouchCallback_t callback)
+        {
+            RightPressed = callback;
         }
 
         static void InitTouch(void)
@@ -115,20 +144,20 @@ namespace esp_sio_dev
 
                 if (input_trig & kTOUCH_Left_Bitmask)
                 {
-                    if (callback_left)
-                        (*callback_left)();
+                    if (LeftPressed)
+                        (*LeftPressed)();
                 }
 
                 if (input_trig & kTOUCH_Confirm_Bitmask)
                 {
-                    if (callback_confirm)
-                        (*callback_confirm)();
+                    if (ConfirmPressed)
+                        (*ConfirmPressed)();
                 }
 
                 if (input_trig & kTOUCH_Right_Bitmask)
                 {
-                    if (callback_right)
-                        (*callback_right)();
+                    if (RightPressed)
+                        (*RightPressed)();
                 }
                 vTaskDelay(16 / portTICK_PERIOD_MS);
             }

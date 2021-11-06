@@ -32,6 +32,27 @@ namespace esp_sio_dev
 		static esp_err_t SendCommandStream(uint8_t *command_buffer, size_t length);
 		static esp_err_t SendSingleCommand(uint8_t command);
 
+		void DrawBox(int32_t x, int32_t y, uint8_t w, uint8_t h, bool color_set)
+		{
+			for (uint8_t y_offset = 0; y_offset < h; y_offset++)
+			{
+				int32_t _y = y + y_offset;
+				if (_y >= DISPLAY_HEIGHT)
+					return;
+
+				for (uint8_t x_offset = 0; x_offset < w; x_offset++)
+				{
+					int32_t _x = (x + x_offset);
+					if (_x >= DISPLAY_WIDTH || _x < 0)
+					{
+						continue;
+					}
+
+					display_buffer[(_y * DISPLAY_WIDTH) + _x] = color_set;
+				}
+			}
+		}
+
 		void DrawChar(uint8_t character, int32_t x_pos, int32_t y_pos, bool clear_bg, bool colors_inverted)
 		{
 			uint16_t glyph_index;

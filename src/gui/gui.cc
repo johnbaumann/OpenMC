@@ -11,6 +11,7 @@
 #include <freertos/task.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 //#define SHOW_FPS
 
@@ -21,35 +22,122 @@ namespace esp_sio_dev
         DisplayState display_state = kBootStatus;
         static uint32_t last_input_timestamp;
 
+        char item_list[4][10];
+        static int menu_index = 0;
+
         void Callback_Left(void)
         {
             last_input_timestamp = system::timer::timestamp;
             printf("Callback Left\n");
+
+            switch (display_state)
+            {
+            case DisplayState::kMainStatus:
+                break;
+
+            case DisplayState::kMainMenu:
+                if (menu_index > 0)
+                {
+                    menu_index--;
+                }
+                break;
+
+            case DisplayState::kFileMenu:
+                //
+                break;
+
+            case DisplayState::kWifiMenu:
+                //
+                break;
+
+            case DisplayState::kIdle:
+                //
+                break;
+
+            default:
+                break;
+            }
         }
 
         void Callback_Confirm(void)
         {
             last_input_timestamp = system::timer::timestamp;
             printf("Callback Confirm\n");
+
+            switch (display_state)
+            {
+            case DisplayState::kMainStatus:
+                display_state = kMainMenu;
+                menu_index = 0;
+                break;
+
+            case DisplayState::kMainMenu:
+                display_state = kMainStatus;
+                break;
+
+            case DisplayState::kFileMenu:
+                //
+                break;
+
+            case DisplayState::kWifiMenu:
+                //
+                break;
+
+            case DisplayState::kIdle:
+                //
+                break;
+
+            default:
+                break;
+            }
         }
 
         void Callback_Right(void)
         {
             last_input_timestamp = system::timer::timestamp;
             printf("Callback Right\n");
+
+            switch (display_state)
+            {
+            case DisplayState::kMainStatus:
+                break;
+
+            case DisplayState::kMainMenu:
+                if (menu_index < (3))
+                {
+                    menu_index++;
+                }
+                break;
+
+            case DisplayState::kFileMenu:
+                //
+                break;
+
+            case DisplayState::kWifiMenu:
+                //
+                break;
+
+            case DisplayState::kIdle:
+                //
+                break;
+
+            default:
+                break;
+            }
         }
 
         static void DoDisplay(void)
         {
             char text_buffer[256];
-            int32_t msg_y_offset = 0;
+            int32_t msg_y_offset = 1;
 
             switch (display_state)
             {
 
             case DisplayState::kBootStatus:
                 sprintf(text_buffer, "Attempting to\nload config\nfrom SD...");
-                oled::DrawMessage(text_buffer, 0, 0, false, true, false);
+                oled::DrawMessage(text_buffer, 0, msg_y_offset, false, true, false);
+                msg_y_offset += 7;
                 break;
 
             case DisplayState::kMainStatus:
@@ -66,8 +154,8 @@ namespace esp_sio_dev
                 {
                     sprintf(text_buffer, "Wifi Disabled");
                 }
-
-                oled::DrawMessage(text_buffer, 0, msg_y_offset += 7, false, true, true);
+                oled::DrawMessage(text_buffer, 0, msg_y_offset, false, true, true);
+                msg_y_offset += 7;
 
                 if (storage::config::settings.wifi_mode != wifi::Mode::kNone)
                 {
@@ -80,16 +168,27 @@ namespace esp_sio_dev
                         // To-do: Grab status from ap/client module, alert to connection failure
                         sprintf(text_buffer, "Connecting...");
                     }
-                    oled::DrawMessage(text_buffer, 0, msg_y_offset += 7, false, true);
+                    oled::DrawMessage(text_buffer, 0, msg_y_offset, false, true);
+                    msg_y_offset += 7;
                 }
 
-                sprintf(text_buffer, "Current file:\n%s", storage::loaded_file_path);
-                oled::DrawMessage(text_buffer, 0, msg_y_offset += 7, true, true);
+                sprintf(text_buffer, "%s", storage::loaded_file_path + 7);
+                oled::DrawMessage(text_buffer, 0, msg_y_offset, true, true);
+                //msg_y_offset += 7;
 
                 break;
 
             case DisplayState::kMainMenu:
-                //
+                for (int i = 0; i < 4; i++)
+                {
+                    sprintf(text_buffer, "%s", item_list[i]);
+                    if (menu_index == i)
+                    {
+                        oled::DrawBox(0, msg_y_offset - 1, ((strlen(item_list[i]) + 1) * 6) + 2, 8, true);
+                    }
+                    oled::DrawMessage(text_buffer, 1, msg_y_offset, false, true, menu_index == i);
+                    msg_y_offset += 9;
+                }
                 break;
 
             case DisplayState::kFileMenu:
@@ -122,6 +221,11 @@ namespace esp_sio_dev
             uint32_t fps_counter_start = 0;
             char fps_display[16];
 #endif
+
+            for (int i = 0; i < 4; i++)
+            {
+                sprintf(item_list[i], "Test %i", i);
+            }
 
             while (1)
             {

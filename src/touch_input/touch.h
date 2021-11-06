@@ -17,9 +17,9 @@ namespace esp_sio_dev
 
         typedef void (*TouchCallback_t)(void);
 
-        void SetCallback_Left(TouchCallback_t callback);
-        void SetCallback_Confirm(TouchCallback_t callback);
-        void SetCallback_Right(TouchCallback_t callback);
+        void SetCallback_LeftPressed(TouchCallback_t callback);
+        void SetCallback_ConfirmPressed(TouchCallback_t callback);
+        void SetCallback_RightPressed(TouchCallback_t callback);
         void Task_TouchInput(void *pvParameter);
 
     } // touch_input

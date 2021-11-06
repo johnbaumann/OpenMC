@@ -84,9 +84,9 @@ namespace esp_sio_dev
         oled::Init(); // Init oled screen
         xTaskCreatePinnedToCore(gui::Task_UpdateScreen, "screen_update_task_core_0", GUI_TASK_SIZE, NULL, 0, NULL, 0);
 
-        touch_input::SetCallback_Left(gui::Callback_Left);
-        touch_input::SetCallback_Confirm(gui::Callback_Confirm);
-        touch_input::SetCallback_Right(gui::Callback_Right);
+        touch_input::SetCallback_LeftPressed(gui::Callback_Left);
+        touch_input::SetCallback_ConfirmPressed(gui::Callback_Confirm);
+        touch_input::SetCallback_RightPressed(gui::Callback_Right);
         xTaskCreatePinnedToCore(touch_input::Task_TouchInput, "touch_pad_input_task_core_0", TOUCH_INPUT_TASK_SIZE, NULL, 0, NULL, 0);
 
         storage::Init();
