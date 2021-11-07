@@ -22,13 +22,13 @@ namespace esp_sio_dev
         DisplayState display_state = kBootStatus;
         static uint32_t last_input_timestamp;
 
-        char item_list[4][10];
+        char item_list[14][10];
         static int menu_index = 0;
+        static int menu_start_index = 0;
 
         void Callback_Left(void)
         {
             last_input_timestamp = system::timer::timestamp;
-            printf("Callback Left\n");
 
             switch (display_state)
             {
@@ -39,6 +39,7 @@ namespace esp_sio_dev
                 if (menu_index > 0)
                 {
                     menu_index--;
+                    menu_start_index = 7 * (menu_index / 7);
                 }
                 break;
 
@@ -62,13 +63,13 @@ namespace esp_sio_dev
         void Callback_Confirm(void)
         {
             last_input_timestamp = system::timer::timestamp;
-            printf("Callback Confirm\n");
 
             switch (display_state)
             {
             case DisplayState::kMainStatus:
                 display_state = kMainMenu;
                 menu_index = 0;
+                menu_start_index = 0;
                 break;
 
             case DisplayState::kMainMenu:
@@ -95,7 +96,6 @@ namespace esp_sio_dev
         void Callback_Right(void)
         {
             last_input_timestamp = system::timer::timestamp;
-            printf("Callback Right\n");
 
             switch (display_state)
             {
@@ -103,9 +103,10 @@ namespace esp_sio_dev
                 break;
 
             case DisplayState::kMainMenu:
-                if (menu_index < (3))
+                if (menu_index < (13))
                 {
                     menu_index++;
+                    menu_start_index = 7 * (menu_index / 7);
                 }
                 break;
 
@@ -175,18 +176,17 @@ namespace esp_sio_dev
                 sprintf(text_buffer, "%s", storage::loaded_file_path + 7);
                 oled::DrawMessage(text_buffer, 0, msg_y_offset, true, true);
                 //msg_y_offset += 7;
-
                 break;
 
             case DisplayState::kMainMenu:
-                for (int i = 0; i < 4; i++)
+                for (int i = menu_start_index; i < menu_start_index + 7; i++)
                 {
                     sprintf(text_buffer, "%s", item_list[i]);
                     if (menu_index == i)
                     {
-                        oled::DrawBox(0, msg_y_offset - 1, ((strlen(item_list[i]) + 1) * 6) + 2, 8, true);
+                        oled::DrawBox(0, msg_y_offset - 1, oled::GetMessageRenderedWidth(item_list[i]) + 2, 8, true);
                     }
-                    oled::DrawMessage(text_buffer, 1, msg_y_offset, false, true, menu_index == i);
+                    oled::DrawMessage(text_buffer, 1, msg_y_offset, false, true, (menu_index == i));
                     msg_y_offset += 9;
                 }
                 break;
@@ -222,7 +222,7 @@ namespace esp_sio_dev
             char fps_display[16];
 #endif
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 14; i++)
             {
                 sprintf(item_list[i], "Test %i", i);
             }
