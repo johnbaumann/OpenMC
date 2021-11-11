@@ -3,7 +3,6 @@
 #include "playstation/sio.h"
 #include "playstation/sio_memory_card.h"
 #include "storage/sdcard.h"
-#include "storage/spiffs.h"
 #include "system/timer.h"
 
 #include "logging.h"
@@ -88,27 +87,27 @@ namespace esp_sio_dev
       if (sdcard::Init() == ESP_OK)
       {
         strcpy(base_path, "/sdcard");
+        // Mount successful
+        storage::ready = true;
       }
-      else if (spiffs::Init() == ESP_OK)
-      {
-        strcpy(base_path, "/spiffs");
-      }
+      /*
+      // To-do: Figure out how ram filesystem should work
+      // File only exists in memory, but should be able to
+      // download/upload directly to ram from web ui(overwrite),
+      // save, delete, an downlaod.
       else
       {
         // Fallback option if all else fails
         // MC Image only persists in memory
         strcpy(base_path, "/ramfs");
-      }
+      }*/
 
-      // Load default.mc, create file if it doesn't exist.  
+      // Load default.mc, create file if it doesn't exist.
       sprintf(loaded_file_path, "%s/default.mc", base_path);
-      if(!LoadCardFromFile(loaded_file_path, sio::memory_card::memory_card_ram))
+      if (!LoadCardFromFile(loaded_file_path, sio::memory_card::memory_card_ram))
       {
         sio::memory_card::committed_to_storage = false;
       }
-
-      // Mount successful
-      storage::ready = true;
     }
 
     bool LoadCardFromFile(char *filepath, void *destination)
@@ -180,7 +179,7 @@ namespace esp_sio_dev
       uint32_t write_end_time;
       uint32_t write_start_time = system::timer::timestamp;
 
-      if(strcmp(loaded_file_path, "") == 0)
+      if (strcmp(loaded_file_path, "") == 0)
       {
         ESP_LOGE(kLogPrefix, "No file loaded, abort write\n");
         return -4;

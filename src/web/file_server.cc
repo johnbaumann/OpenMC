@@ -13,7 +13,9 @@
 #include "playstation/sio.h"
 #include "playstation/sio_memory_card.h"
 #include "storage/storage.h"
+#include "web/percent_decode.h"
 
+#include <cctype>
 #include <stdio.h>
 #include <string.h>
 #include <sys/param.h>
@@ -159,7 +161,7 @@ namespace esp_sio_dev
 
                 if (!dir)
                 {
-                    ESP_LOGE(TAG, "Failed to stat dir : %s", temp_dirpath);
+                    ESP_LOGE(kLogPrefix, "Failed to stat dir : %s", temp_dirpath);
                     /* Respond with 404 Not Found */
                     httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Directory does not exist");
                     ESP_LOGE(kLogPrefix, "Failed to check dir %s\n", temp_dirpath);
@@ -220,7 +222,7 @@ namespace esp_sio_dev
                     //ESP_LOGI(kLogPrefix, "entrypath = %s\n", entrypath);
                     if (stat(entrypath, &entry_stat) == -1)
                     {
-                        ESP_LOGE(TAG, "Failed to stat %s : %s", entrytype, entry->d_name);
+                        ESP_LOGE(kLogPrefix, "Failed to stat %s : %s", entrytype, entry->d_name);
                         continue;
                     }
                     sprintf(entrysize, "%ld", entry_stat.st_size);
@@ -342,7 +344,7 @@ namespace esp_sio_dev
                 URLDecode(filepath);
                 if (!filename)
                 {
-                    ESP_LOGE(TAG, "Filename is too long");
+                    ESP_LOGE(kLogPrefix, "Filename is too long");
                     /* Respond with 500 Internal Server Error */
                     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Filename too long");
                     return ESP_FAIL;
@@ -366,7 +368,7 @@ namespace esp_sio_dev
                     {
                         return favicon_get_handler(req);
                     }
-                    ESP_LOGE(TAG, "Failed to stat file : %s", filepath);
+                    ESP_LOGE(kLogPrefix, "Failed to stat file : %s", filepath);
                     /* Respond with 404 Not Found */
                     httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File does not exist");
                     return ESP_FAIL;
@@ -375,7 +377,7 @@ namespace esp_sio_dev
                 fd = fopen(filepath, "r");
                 if (!fd)
                 {
-                    ESP_LOGE(TAG, "Failed to read existing file : %s", filepath);
+                    ESP_LOGE(kLogPrefix, "Failed to read existing file : %s", filepath);
                     /* Respond with 500 Internal Server Error */
                     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to read existing file");
                     return ESP_FAIL;
@@ -398,7 +400,7 @@ namespace esp_sio_dev
                         if (httpd_resp_send_chunk(req, chunk, chunksize) != ESP_OK)
                         {
                             fclose(fd);
-                            ESP_LOGE(TAG, "File sending failed!");
+                            ESP_LOGE(kLogPrefix, "File sending failed!");
                             /* Abort sending file */
                             httpd_resp_sendstr_chunk(req, NULL);
                             /* Respond with 500 Internal Server Error */
@@ -444,14 +446,14 @@ namespace esp_sio_dev
                 /* Filename cannot have a trailing '/' */
                 if (filename[strlen(filename) - 1] == '/')
                 {
-                    ESP_LOGE(TAG, "Invalid filename : %s", filename);
+                    ESP_LOGE(kLogPrefix, "Invalid filename : %s", filename);
                     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Invalid filename");
                     return ESP_FAIL;
                 }
 
                 if (stat(filepath, &file_stat) == 0)
                 {
-                    ESP_LOGE(TAG, "File already exists : %s", filepath);
+                    ESP_LOGE(kLogPrefix, "File already exists : %s", filepath);
                     /* Respond with 400 Bad Request */
                     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "File already exists");
                     return ESP_FAIL;
@@ -460,7 +462,7 @@ namespace esp_sio_dev
                 /* File cannot be larger than a limit */
                 if (req->content_len > MAX_FILE_SIZE)
                 {
-                    ESP_LOGE(TAG, "File too large : %d bytes", req->content_len);
+                    ESP_LOGE(kLogPrefix, "File too large : %d bytes", req->content_len);
                     /* Respond with 400 Bad Request */
                     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST,
                                         "File size must be less than " MAX_FILE_SIZE_STR "!");
@@ -472,7 +474,7 @@ namespace esp_sio_dev
                 fd = fopen(filepath, "w");
                 if (!fd)
                 {
-                    ESP_LOGE(TAG, "Failed to create file : %s", filepath);
+                    ESP_LOGE(kLogPrefix, "Failed to create file : %s", filepath);
                     /* Respond with 500 Internal Server Error */
                     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to create file");
                     return ESP_FAIL;
@@ -506,7 +508,7 @@ namespace esp_sio_dev
                         fclose(fd);
                         unlink(filepath);
 
-                        ESP_LOGE(TAG, "File reception failed!");
+                        ESP_LOGE(kLogPrefix, "File reception failed!");
                         /* Respond with 500 Internal Server Error */
                         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to receive file");
                         return ESP_FAIL;
@@ -520,7 +522,7 @@ namespace esp_sio_dev
                         fclose(fd);
                         unlink(filepath);
 
-                        ESP_LOGE(TAG, "File write failed!");
+                        ESP_LOGE(kLogPrefix, "File write failed!");
                         /* Respond with 500 Internal Server Error */
                         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to write file to storage");
                         return ESP_FAIL;
@@ -572,14 +574,14 @@ namespace esp_sio_dev
                 /* Filename cannot have a trailing '/' */
                 if (filename[strlen(filename) - 1] == '/')
                 {
-                    ESP_LOGE(TAG, "Invalid filename : %s", filename);
+                    ESP_LOGE(kLogPrefix, "Invalid filename : %s", filename);
                     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Invalid filename");
                     return ESP_FAIL;
                 }
 
                 if (stat(filepath, &file_stat) == -1)
                 {
-                    ESP_LOGE(TAG, "File does not exist : %s", filename);
+                    ESP_LOGE(kLogPrefix, "File does not exist : %s", filename);
                     // Respond with 400 Bad Request
                     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "File does not exist");
                     return ESP_FAIL;
@@ -627,14 +629,14 @@ namespace esp_sio_dev
                 /* Filename cannot have a trailing '/' */
                 if (filename[strlen(filename) - 1] == '/')
                 {
-                    ESP_LOGE(TAG, "Invalid filename : %s", filename);
+                    ESP_LOGE(kLogPrefix, "Invalid filename : %s", filename);
                     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Invalid filename");
                     return ESP_FAIL;
                 }
 
                 if (stat(filepath, &file_stat) == -1)
                 {
-                    ESP_LOGE(TAG, "File does not exist : %s\n", filename);
+                    ESP_LOGE(kLogPrefix, "File does not exist : %s\n", filename);
                     ESP_LOGE(kLogPrefix, "filename = %s, filepath = %s\n", filename, filepath);
                     /* Respond with 400 Bad Request */
                     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "File does not exist");
@@ -672,7 +674,7 @@ namespace esp_sio_dev
 
                 if (server_data)
                 {
-                    ESP_LOGE(TAG, "File server already started");
+                    ESP_LOGE(kLogPrefix, "File server already started");
                     return ESP_ERR_INVALID_STATE;
                 }
 
@@ -680,7 +682,7 @@ namespace esp_sio_dev
                 server_data = (file_server_data *)calloc(1, sizeof(struct file_server_data));
                 if (!server_data)
                 {
-                    ESP_LOGE(TAG, "Failed to allocate memory for server data");
+                    ESP_LOGE(kLogPrefix, "Failed to allocate memory for server data");
                     return ESP_ERR_NO_MEM;
                 }
                 strlcpy(server_data->base_path, base_path,
@@ -694,10 +696,10 @@ namespace esp_sio_dev
                 // target URIs which match the wildcard scheme
                 config.uri_match_fn = httpd_uri_match_wildcard;
 
-                ESP_LOGI(TAG, "Starting HTTP Server on port: '%d'", config.server_port);
+                ESP_LOGI(kLogPrefix, "Starting HTTP Server on port: '%d'", config.server_port);
                 if (httpd_start(&server, &config) != ESP_OK)
                 {
-                    ESP_LOGE(TAG, "Failed to start file server!");
+                    ESP_LOGE(kLogPrefix, "Failed to start file server!");
                     return ESP_FAIL;
                 }
 
