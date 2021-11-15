@@ -58,52 +58,6 @@ namespace esp_sio_dev
                 char scratch[SCRATCH_BUFSIZE];
             };
 
-            struct URIEncoding
-            {
-                const char Decoded;
-                const char Encoded[4];
-            };
-
-            static const char *TAG = "file_server";
-
-            void URLDecode(char *input)
-            {
-                URIEncoding uri_list[20] = {
-                    {' ', "%20"},
-                    {'!', "%21"},
-                    {'#', "%23"},
-                    {'$', "%24"},
-                    {'%', "%25"},
-                    {'&', "%26"},
-                    {'\'', "%27"},
-                    {'(', "%28"},
-                    {')', "%29"},
-                    {'*', "%2A"},
-                    {'+', "%2B"},
-                    {',', "%2C"},
-                    {'/', "%2F"},
-                    {':', "%3A"},
-                    {';', "%3B"},
-                    {'=', "%3D"},
-                    {'?', "%3F"},
-                    {'@', "%40"},
-                    {'[', "%5B"},
-                    {']', "%5D"}};
-
-                char *search;
-
-                for (int y = 0; y < 20; y++)
-                {
-                    search = strstr(input, uri_list[y].Encoded);
-                    while (search != NULL)
-                    {
-                        memmove(search + 1, search + strlen(uri_list[y].Encoded), strlen(input) - strlen(uri_list[y].Encoded) + 1);
-                        search[0] = uri_list[y].Decoded;
-                        search = strstr(input, uri_list[y].Encoded);
-                    }
-                }
-            }
-
             // Handler to redirect incoming GET request for /index.html to
             // This can be overridden by uploading file with same name
             static esp_err_t index_html_get_handler(httpd_req_t *req)
@@ -146,7 +100,6 @@ namespace esp_sio_dev
 
                 // Retrieve the base path of file storage to construct the full path
                 strlcpy(entrypath, dirpath, sizeof(entrypath));
-                URLDecode(entrypath);
                 strlcpy(temp_dirpath, entrypath, sizeof(temp_dirpath));
 
                 // Remove trailing slash or directory will fail to open
@@ -169,7 +122,9 @@ namespace esp_sio_dev
                 }
 
                 // Send HTML file header
-                httpd_resp_sendstr_chunk(req, "<!DOCTYPE html><html><body>");
+                httpd_resp_sendstr_chunk(req, "<!DOCTYPE html><html><head><title>OpenMC ");
+                httpd_resp_sendstr_chunk(req, temp_dirpath);
+                httpd_resp_sendstr_chunk(req, "</title><meta charset=\"utf-8\"</head><body>");
 
                 // Get handle to embedded file upload script
                 extern const unsigned char upload_script_start[] asm("_binary_upload_script_html_start");
@@ -181,10 +136,13 @@ namespace esp_sio_dev
 
                 httpd_resp_sendstr_chunk(req, "<b>Currently loaded file:</b>");
                 httpd_resp_sendstr_chunk(req, storage::loaded_file_path);
-                httpd_resp_sendstr_chunk(req, "<br><br>\n");
+                httpd_resp_sendstr_chunk(req, "<br><br>");
+                httpd_resp_sendstr_chunk(req, "<h1>Index of ");
+                httpd_resp_sendstr_chunk(req, temp_dirpath);
+                httpd_resp_sendstr_chunk(req, "</h1>");
 
                 // Send a shortcut to navigate up a directory
-                httpd_resp_sendstr_chunk(req, "<a href=\"../\">Up to higher level directory</a><br>\n");
+                httpd_resp_sendstr_chunk(req, "<a href=\"../\">Parent directory</a><br>");
 
                 /* Send file-list table definition and column labels */
                 httpd_resp_sendstr_chunk(req,
@@ -226,7 +184,7 @@ namespace esp_sio_dev
                         continue;
                     }
                     sprintf(entrysize, "%ld", entry_stat.st_size);
-                    //ESP_LOGI(TAG, "Found %s : %s (%s bytes)", entrytype, entry->d_name, entrysize);
+                    //ESP_LOGI(kLogPrefix, "Found %s : %s (%s bytes)", entrytype, entry->d_name, entrysize);
 
                     /* Send chunk of HTML file containing table entries with file name and size */
                     httpd_resp_sendstr_chunk(req, "<tr><td><a href=\"");
@@ -303,18 +261,21 @@ namespace esp_sio_dev
  * pointer to path (skipping the preceding base path) */
             static const char *get_path_from_uri(char *dest, const char *base_path, const char *uri, size_t destsize)
             {
-                const size_t base_pathlen = strlen(base_path);
-                size_t pathlen = strlen(uri);
+                char decoded_uri[513];
+                web::PercentDecode(uri, decoded_uri);
+                web::PercentDecode(base_path, dest);
+                const size_t base_pathlen = strlen(dest);
+                size_t pathlen = strlen(decoded_uri);
 
-                const char *quest = strchr(uri, '?');
+                const char *quest = strchr(decoded_uri, '?');
                 if (quest)
                 {
-                    pathlen = MIN(pathlen, quest - uri);
+                    pathlen = MIN(pathlen, quest - decoded_uri);
                 }
-                const char *hash = strchr(uri, '#');
+                const char *hash = strchr(decoded_uri, '#');
                 if (hash)
                 {
-                    pathlen = MIN(pathlen, hash - uri);
+                    pathlen = MIN(pathlen, hash - decoded_uri);
                 }
 
                 if (base_pathlen + pathlen + 1 > destsize)
@@ -324,8 +285,8 @@ namespace esp_sio_dev
                 }
 
                 /* Construct full path (base + path) */
-                strcpy(dest, base_path);
-                strlcpy(dest + base_pathlen, uri, pathlen + 1);
+                //strcpy(dest, base_path);
+                strlcpy(dest + base_pathlen, decoded_uri, pathlen + 1);
 
                 /* Return pointer to path, skipping the base */
                 return dest + base_pathlen;
@@ -341,7 +302,7 @@ namespace esp_sio_dev
                 const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
                                                          req->uri, sizeof(filepath));
 
-                URLDecode(filepath);
+                //URLDecode(filepath);
                 if (!filename)
                 {
                     ESP_LOGE(kLogPrefix, "Filename is too long");
@@ -383,7 +344,7 @@ namespace esp_sio_dev
                     return ESP_FAIL;
                 }
 
-                //ESP_LOGI(TAG, "Sending file : %s (%ld bytes)...", filename, file_stat.st_size);
+                //ESP_LOGI(kLogPrefix, "Sending file : %s (%ld bytes)...", filename, file_stat.st_size);
                 set_content_type_from_file(req, filename);
 
                 /* Retrieve the pointer to scratch buffer for temporary storage */
@@ -414,7 +375,7 @@ namespace esp_sio_dev
 
                 /* Close file after sending complete */
                 fclose(fd);
-                //ESP_LOGI(TAG, "File sending complete");
+                //ESP_LOGI(kLogPrefix, "File sending complete");
 
                 /* Respond with an empty chunk to signal HTTP response completion */
                 httpd_resp_send_chunk(req, NULL, 0);
@@ -435,7 +396,8 @@ namespace esp_sio_dev
                 /* Note sizeof() counts NULL termination hence the -1 */
                 const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
                                                          req->uri + sizeof("/upload") - 1, sizeof(filepath));
-                URLDecode(filepath);
+                //URLDecode(filepath);
+                ets_printf("Upload filename: %s, filepath = %s\n", filename, filepath);
                 if (!filename)
                 {
                     /* Respond with 500 Internal Server Error */
@@ -480,7 +442,7 @@ namespace esp_sio_dev
                     return ESP_FAIL;
                 }
 
-                //ESP_LOGI(TAG, "Receiving file : %s...", filename);
+                //ESP_LOGI(kLogPrefix, "Receiving file : %s...", filename);
 
                 /* Retrieve the pointer to scratch buffer for temporary storage */
                 char *buf = ((struct file_server_data *)req->user_ctx)->scratch;
@@ -493,7 +455,7 @@ namespace esp_sio_dev
                 while (remaining > 0)
                 {
 
-                    //ESP_LOGI(TAG, "Remaining size : %d", remaining);
+                    //ESP_LOGI(kLogPrefix, "Remaining size : %d", remaining);
                     /* Receive the file part by part into a buffer */
                     if ((received = httpd_req_recv(req, buf, MIN(remaining, SCRATCH_BUFSIZE))) <= 0)
                     {
@@ -535,7 +497,7 @@ namespace esp_sio_dev
 
                 /* Close file upon upload completion */
                 fclose(fd);
-                //ESP_LOGI(TAG, "File reception complete");
+                //ESP_LOGI(kLogPrefix, "File reception complete");
 
                 strlcpy(redirect_path, filename, sizeof(redirect_path));
                 end_of_redirect_path = strrchr(redirect_path, '/');
@@ -563,7 +525,7 @@ namespace esp_sio_dev
                 /* Note sizeof() counts NULL termination hence the -1 */
                 const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
                                                          req->uri + sizeof("/delete") - 1, sizeof(filepath));
-                URLDecode(filepath);
+                //URLDecode(filepath);
                 if (!filename)
                 {
                     /* Respond with 500 Internal Server Error */
@@ -587,7 +549,7 @@ namespace esp_sio_dev
                     return ESP_FAIL;
                 }
 
-                //ESP_LOGI(TAG, "Deleting file : %s", filename);
+                //ESP_LOGI(kLogPrefix, "Deleting file : %s", filename);
                 // Delete file
                 unlink(filepath);
 
@@ -616,7 +578,7 @@ namespace esp_sio_dev
                 /* Note sizeof() counts NULL termination hence the -1 */
                 const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
                                                          req->uri + sizeof("/mount") - 1, sizeof(filepath));
-                URLDecode(filepath);
+                //URLDecode(filepath);
                 if (!filename)
                 {
                     /* Respond with 500 Internal Server Error */

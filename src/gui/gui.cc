@@ -173,7 +173,7 @@ namespace esp_sio_dev
                     msg_y_offset += 7;
                 }
 
-                sprintf(text_buffer, "%s", storage::loaded_file_path + 7);
+                sprintf(text_buffer, "%s", storage::loaded_file_path + strlen(storage::base_path));
                 oled::DrawMessage(text_buffer, 0, msg_y_offset, true, true);
                 //msg_y_offset += 7;
                 break;

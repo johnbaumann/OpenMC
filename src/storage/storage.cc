@@ -86,7 +86,7 @@ namespace esp_sio_dev
     {
       if (sdcard::Init() == ESP_OK)
       {
-        strcpy(base_path, "/sdcard");
+        strcpy(storage::base_path, "/sdcard");
         // Mount successful
         storage::ready = true;
       }
