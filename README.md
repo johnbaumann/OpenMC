@@ -15,8 +15,8 @@ A PCB is in the works that will rely on Heltec's Wifi Kit 32 and a few additiona
 # Software setup
 
 1. Follow this guide to setup the ESP-IDF SDK : [https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html)  
-2. Clone this repo : `git clone https://github.com/johnbaumann/esp-sio-dev`
-3. In the 'esp-sio-dev' directory, open a terminal and [setup environnment variables](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html#step-4-set-up-the-environment-variables)  
+2. Clone this repo : `git clone https://github.com/johnbaumann/OpenMC`
+3. In the 'OpenMC' directory, open a terminal and [setup environnment variables](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html#step-4-set-up-the-environment-variables)  
 4. Connect your ESP32 and type `idf.py build` to compile the project.
 5. Type `idf.py -p PORT [-b BAUD] flash` to upload the binary to your ESP board (Make sure you change `PORT` to your actual com port).
 
@@ -55,7 +55,7 @@ The default .mc file is currently hardcoded :
 ```c
 sprintf(loaded_file_path, "%s/default.mc", base_path);
 ```  
-[https://github.com/johnbaumann/esp-sio-dev/blob/master/src/storage/storage.cc#L104](https://github.com/johnbaumann/esp-sio-dev/blob/master/src/storage/storage.cc#L104)
+[https://github.com/johnbaumann/OpenMC/blob/master/src/storage/storage.cc#L104](https://github.com/johnbaumann/esp-sio-dev/blob/master/src/storage/storage.cc#L104)
 
 ### Accessing the web interface
 
