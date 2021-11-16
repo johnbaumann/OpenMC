@@ -1,4 +1,4 @@
-# ESP-SIO-DEV
+# OpenMC
 
 **PROJECT IS A WORK IN PROGRESS, PIN ASSIGNMENTS MAY CHANGE**  
 *Pins last changed in commit on August 15th 2021*
@@ -48,12 +48,7 @@ PSK 64 digit hex passwords are not currently supported
 
 ## SD card : 
 
-If no SD card is found, the [spiffs](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/spiffs.html) filesystem is used.
-Notice: spiffs is quite unreliable and will soon be removed from the codebase
-
-It should be noted that the spiffs filesystem has a 31 characters limitation for the whole filepath, something to be mindfull of when uploading files via the web interface.
-
-sources : https://discord.com/channels/642647820683444236/642848627823345684/895115268253179904
+If no SD card is found, the web server will fail to start. A single file ram filesystem may be added down the road.
 
 The default .mc file is currently hardcoded : 
 
@@ -61,10 +56,6 @@ The default .mc file is currently hardcoded :
 sprintf(loaded_file_path, "%s/default.mc", base_path);
 ```  
 [https://github.com/johnbaumann/esp-sio-dev/blob/master/src/storage/storage.cc#L104](https://github.com/johnbaumann/esp-sio-dev/blob/master/src/storage/storage.cc#L104)
-
-### SPIFFS filesystem - discontinuing
-
-https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/spiffs.html
 
 ### Accessing the web interface
 
