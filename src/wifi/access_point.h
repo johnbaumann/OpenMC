@@ -1,7 +1,7 @@
 #ifndef _ACCESS_POINT_H
 #define _ACCESS_POINT_H
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace wifi
     {
@@ -12,6 +12,6 @@ namespace esp_sio_dev
         } // access_point
 
     } // wifi
-} // esp_sio_dev
+} // openmc
 
 #endif // _ACCESS_POINT_H

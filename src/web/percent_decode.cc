@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace web
     {
@@ -109,4 +109,4 @@ namespace esp_sio_dev
                 ProcessNextChar(c);
         }
     } // web
-} // esp_sio_dev
+} // openmc

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace touch_input
     {
@@ -23,6 +23,6 @@ namespace esp_sio_dev
         void Task_TouchInput(void *pvParameter);
 
     } // touch_input
-} // esp_sio_dev
+} // openmc
 
 #endif // _TOUCH_H

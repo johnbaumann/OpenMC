@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace sio
     {
@@ -30,6 +30,6 @@ namespace esp_sio_dev
         void ProcessEvents();
         void TickEventCounter();
     } // namespace sio
-} // namespace esp_sio_dev
+} // namespace openmc
 
 #endif // SIO_H

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace gui
     {
@@ -22,9 +22,10 @@ namespace esp_sio_dev
         void Callback_Confirm(void);
         void Callback_Right(void);
         void Task_UpdateScreen(void *params);
+        bool WakeDisplay();
 
         extern DisplayState display_state;
     } // gui
-} // esp_sio_dev
+} // openmc
 
 #endif // _GUI_H

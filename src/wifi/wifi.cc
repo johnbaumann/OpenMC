@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace wifi
     {
@@ -11,4 +11,4 @@ namespace esp_sio_dev
         char ip_address[16] = "192.168.4.1";
         uint8_t ssid[32];
     } // wifi
-} // esp_sio_dev
+} // openmc

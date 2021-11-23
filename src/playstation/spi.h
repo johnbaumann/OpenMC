@@ -13,7 +13,7 @@
 
 #define MAX_TIMEOUT_TICKS 0xFFFF // No idea how long this is, need to time/adjust
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace spi
     {

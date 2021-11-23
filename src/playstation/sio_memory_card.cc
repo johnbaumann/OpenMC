@@ -13,7 +13,7 @@
 
 //#define MC_DEBUG
 
-namespace esp_sio_dev
+namespace openmc
 {
   namespace sio
   {
@@ -425,4 +425,4 @@ namespace esp_sio_dev
     } // namespace memory_card
 
   } // namespace sio
-} // namespace esp_sio_dev
+} // namespace openmc

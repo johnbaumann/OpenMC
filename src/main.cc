@@ -47,7 +47,7 @@ extern "C"
     void app_main(void);
 }
 
-namespace esp_sio_dev
+namespace openmc
 {
     void main(void);
     void SetupInterrupts();
@@ -102,11 +102,11 @@ namespace esp_sio_dev
         core0_stall_init();
         start_app_cpu();
 
-        // Try loading config from /sdcard/config.txt, else load defaults
-        if (storage::config::LoadConfig() == false)
-        {
-            storage::config::LoadDefaultSettings();
-        }
+        // Load defaults so system is in a known state
+        storage::config::LoadDefaultSettings();
+
+        // Try loading config from /sdcard/config.txt, else defaults set above remain in place
+        storage::config::LoadConfig();
 
         gui::display_state = gui::DisplayState::kMainStatus;
 
@@ -149,5 +149,5 @@ namespace esp_sio_dev
 // Things.
 void app_main(void)
 {
-    esp_sio_dev::main();
+    openmc::main();
 }

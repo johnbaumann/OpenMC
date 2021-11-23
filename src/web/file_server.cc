@@ -10,6 +10,7 @@
 #include "web/file_server.h"
 
 #include "logging.h"
+#include "gui/gui.h"
 #include "playstation/sio.h"
 #include "playstation/sio_memory_card.h"
 #include "storage/storage.h"
@@ -43,7 +44,7 @@
 #define IS_FILE_EXT(filename, ext) \
     (strcasecmp(&filename[strlen(filename) - sizeof(ext) + 1], ext) == 0)
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace web
     {
@@ -618,6 +619,7 @@ namespace esp_sio_dev
                     httpd_resp_set_status(req, "303 See Other");
                     httpd_resp_set_hdr(req, "Location", redirect_path);
                     httpd_resp_sendstr(req, "File mounted successfully");
+                    gui::WakeDisplay();
                 }
                 else
                 {
@@ -705,4 +707,4 @@ namespace esp_sio_dev
         } // file_server
 
     } // web
-} // esp_sio_dev
+} // openmc

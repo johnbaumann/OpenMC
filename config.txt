@@ -6,6 +6,5 @@
 # password should be either 0 characters(leave blank for open auth), or a password 7-63 characters long
 # PSK 64 digit hex passwords are not currently supported
 mode=ap
-ssid=esp-sio-client
-password=espdevrulezdude!
-default
+ssid=openmc
+password=ps1devrulezdude!

@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <esp_attr.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace system
     {
@@ -14,6 +14,6 @@ namespace esp_sio_dev
             void Init(void);
         } // timer
     } // system
-} // esp_sio_dev
+} // openmc
 
 #endif // _TIMER_H

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace sio
     {
@@ -86,6 +86,6 @@ namespace esp_sio_dev
 
     } //namespace sio
 
-} // namespace esp_sio_dev
+} // namespace openmc
 
 #endif //SIO_MEMORY_CARD_H

@@ -55,7 +55,7 @@ The default .mc file is currently hardcoded :
 ```c
 sprintf(loaded_file_path, "%s/default.mc", base_path);
 ```  
-[https://github.com/johnbaumann/OpenMC/blob/master/src/storage/storage.cc#L104](https://github.com/johnbaumann/esp-sio-dev/blob/master/src/storage/storage.cc#L104)
+[https://github.com/enMC/blob/master/src/storage/storage.cc#L106](https://github.com/johnbaumann/openmc/blob/master/src/storage/storage.cc#L106)
 
 ### Accessing the web interface
 

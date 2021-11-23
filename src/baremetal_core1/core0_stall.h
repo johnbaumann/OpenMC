@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Notice: This file modified for use in this project, esp-sio-dev
+// Notice: This file modified for use in this project, openmc
 
 #ifndef _CORE0_STALL_H_
 #define _CORE0_STALL_H_

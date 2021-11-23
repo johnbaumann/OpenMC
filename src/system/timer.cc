@@ -11,7 +11,7 @@
 #include <esp_timer.h>
 #include <esp_log.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace system
     {
@@ -42,6 +42,6 @@ namespace esp_sio_dev
             }
         } // timer
     } // system
-} // esp_sio_dev
+} // openmc
 
 #endif // _TIMER_H

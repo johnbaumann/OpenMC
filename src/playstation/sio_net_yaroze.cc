@@ -5,7 +5,7 @@
 
 uint8_t current_command;
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace sio
     {
@@ -55,4 +55,4 @@ namespace esp_sio_dev
             }
         } // namespace net_yaroze
     } // namespace sio
-} // namespace esp_sio_dev
+} // namespace openmc

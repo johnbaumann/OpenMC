@@ -8,7 +8,7 @@
 
 #include <esp32/rom/ets_sys.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace sio
     {
@@ -146,4 +146,4 @@ namespace esp_sio_dev
             }
         }
     } // namespace sio
-} // namespace esp_sio_dev
+} // namespace openmc

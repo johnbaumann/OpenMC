@@ -3,7 +3,7 @@
 #include "playstation/sio.h"
 #include "playstation/spi.h"
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace sio
     {
@@ -123,4 +123,4 @@ namespace esp_sio_dev
             }
         } // namespace controller
     } // namespace sio
-} // namespace esp_sio_dev
+} // namespace openmc

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-// Notice: This file modified for use in this project, esp-sio-dev
+// Notice: This file modified for use in this project, openmc
 
 #include <soc/dport_reg.h>
 #include <soc/cpu.h>

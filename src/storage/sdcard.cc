@@ -21,7 +21,7 @@
 
 #define SPI_DMA_CHAN (spi_dma_chan_t)1
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace storage
     {
@@ -126,4 +126,4 @@ namespace esp_sio_dev
             }
         } // sdcard
     } // storage
-} // esp_sio_dev
+} // openmc

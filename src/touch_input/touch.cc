@@ -16,7 +16,7 @@
 #define TOUCH_DEFAULT_MIN 300
 #define TOUCH_DEFAULT_MAX 400
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace touch_input
     {
@@ -163,4 +163,4 @@ namespace esp_sio_dev
             }
         }
     } // touch_input
-} // esp_sio_dev
+} // openmc

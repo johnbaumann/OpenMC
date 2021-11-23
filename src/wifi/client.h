@@ -1,7 +1,7 @@
 #ifndef _CLIENT_H
 #define _CLIENT_H
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace wifi
     {
@@ -11,6 +11,6 @@ namespace esp_sio_dev
             void Init(void);
         } // client
     } // wifi
-} // esp_sio_dev
+} // openmc
 
 #endif // _CLIENT_H

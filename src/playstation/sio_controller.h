@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace sio
     {
@@ -44,6 +44,6 @@ namespace esp_sio_dev
             uint8_t ReadCmnd_Tick(uint8_t);
         } // namespace controller
     }     // namespace sio
-} // namespace esp_sio_dev
+} // namespace openmc
 
 #endif //SIO_CONTROLLER_H

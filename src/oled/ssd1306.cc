@@ -22,7 +22,7 @@
 // https://github.com/yanbe/ssd1306-esp-idf-i2c
 // http://robotcantalk.blogspot.com/2015/03/interfacing-arduino-with-ssd1306-driven.html
 
-namespace esp_sio_dev
+namespace openmc
 {
 	namespace oled
 	{
@@ -529,4 +529,4 @@ namespace esp_sio_dev
 			gpio_set_level(kOLEDPin_RST, 1);
 		}
 	} // oled
-} // esp_sio_dev
+} // openmc

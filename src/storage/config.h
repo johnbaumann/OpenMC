@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace storage
     {
@@ -17,6 +17,7 @@ namespace esp_sio_dev
                 wifi::Mode wifi_mode;
                 uint8_t ssid[33];     // SSID max length = 32 + 1 null terminator
                 uint8_t password[64]; // Max passcode length = 63 + 1 null terminator. To-do: PSK 64 digit hex support?
+                uint8_t contrast;
                 // last file
                 // load last file Y/N
                 // (default) i.e. freepsxboot

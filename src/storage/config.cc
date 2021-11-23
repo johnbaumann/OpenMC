@@ -12,7 +12,7 @@
 #define MIN_LINE_LENGTH (3)
 #define MAX_LINE_LENGTH (256) // Longest setting name(password) w/ = sign(9) + longest value length(password)(63) + null terminator(1) = 73
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace storage
     {
@@ -124,6 +124,7 @@ namespace esp_sio_dev
                 {
                     // Valid configuration file, copy settings
                     settings = temp_settings;
+                    settings.contrast = 0xFF; // Contrast not implemented to config yet
                     return true;
                 }
                 else
@@ -134,12 +135,13 @@ namespace esp_sio_dev
 
             void LoadDefaultSettings()
             {
-                static const uint8_t default_ssid[] = "esp-sio-client";
-                static const uint8_t default_password[] = "espdevrulezdude!";
+                static const uint8_t default_ssid[] = "openmc";
+                static const uint8_t default_password[] = "ps1devrulezdude!";
 
                 settings.wifi_mode = wifi::Mode::kAcessPoint;
                 memcpy(settings.ssid, default_ssid, sizeof(default_ssid));
                 memcpy(settings.password, default_password, sizeof(default_password));
+                settings.contrast = 0xFF;
             }
         }
     }

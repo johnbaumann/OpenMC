@@ -12,7 +12,7 @@
 
 extern volatile void *_xt_intexc_hooks[];
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace spi
     {
@@ -89,12 +89,12 @@ namespace esp_sio_dev
                 }
                 sio::ProcessEvents(); // Received byte is processed by state machine
                 // SPDR is accessed directly by previous function, relic of AVR approach.
-                // To-do: ? Change to last_byte = esp_sio_dev::sio::ProcessEvents();
+                // To-do: ? Change to last_byte = openmc::sio::ProcessEvents();
                 last_byte = SPDR;
             }
 
             // Clear last command
-            sio::current_command = esp_sio_dev::sio::PS1_SIOCommands::Idle;
+            sio::current_command = openmc::sio::PS1_SIOCommands::Idle;
             sio::TickEventCounter();
 
             // Reset emulated device commands/variables
@@ -131,4 +131,4 @@ namespace esp_sio_dev
             intr_matrix_set(1, ETS_GPIO_INTR_SOURCE, 19);
         }
     } // spi
-} // esp_sio_dev
+} // openmc

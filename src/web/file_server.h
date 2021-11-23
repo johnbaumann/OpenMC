@@ -3,7 +3,7 @@
 
 #include <esp_err.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace web
     {
@@ -13,6 +13,6 @@ namespace esp_sio_dev
         } // file_server
 
     } // web
-} // esp_sio_dev
+} // openmc
 
 #endif // _FILE_SERVER_H

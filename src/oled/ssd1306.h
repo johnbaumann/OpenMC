@@ -7,7 +7,7 @@
 
 // Datasheet - https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace oled
     {

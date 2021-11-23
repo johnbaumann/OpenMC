@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
   namespace storage
   {
@@ -218,4 +218,4 @@ namespace esp_sio_dev
       return result;
     }
   } // storage
-} // esp_sio_dev
+} // openmc

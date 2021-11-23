@@ -26,7 +26,7 @@
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace wifi
     {
@@ -151,4 +151,4 @@ namespace esp_sio_dev
         } // client
 
     } // wifi
-} // esp_sio_dev
+} // openmc

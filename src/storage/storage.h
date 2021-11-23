@@ -6,7 +6,7 @@
 
 #define MAX_WRITE_FAILURES 5
 
-namespace esp_sio_dev
+namespace openmc
 {
   namespace storage
   {
@@ -21,6 +21,6 @@ namespace esp_sio_dev
     bool LoadCardFromFile(char *filepath, void *destination);
     int WriteFile();
   } // storage
-} // esp_sio_dev
+} // openmc
 
 #endif // _STORAGE_H

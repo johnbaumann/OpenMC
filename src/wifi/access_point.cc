@@ -20,7 +20,7 @@
 #define AP_WIFI_CHANNEL 5
 #define EXAMPLE_MAX_STA_CONN 1
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace wifi
     {
@@ -108,4 +108,4 @@ namespace esp_sio_dev
         } // access_point
 
     } // wifi
-} // esp_sio_dev
+} // openmc

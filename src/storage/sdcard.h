@@ -3,7 +3,7 @@
 
 #include <esp_err.h>
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace storage
     {
@@ -15,6 +15,6 @@ namespace esp_sio_dev
             void Task_MountSDCard(void *params);
         } // sdcard
     } // storage
-} // esp_sio_dev
+} // openmc
 
 #endif // _SDCARD_H

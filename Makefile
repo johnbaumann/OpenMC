@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := esp-sio-device
+PROJECT_NAME := openmc
 
 include $(IDF_PATH)/make/project.mk
 

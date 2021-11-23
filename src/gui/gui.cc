@@ -15,12 +15,14 @@
 
 //#define SHOW_FPS
 
-namespace esp_sio_dev
+namespace openmc
 {
     namespace gui
     {
         DisplayState display_state = kBootStatus;
-        static uint32_t last_input_timestamp;
+        static uint32_t last_gui_update_timestamp;
+        static bool display_on = true;
+        static bool display_dimmed = false;
 
         char item_list[14][10];
         static int menu_index = 0;
@@ -28,7 +30,11 @@ namespace esp_sio_dev
 
         void Callback_Left(void)
         {
-            last_input_timestamp = system::timer::timestamp;
+            // if display was off, return and ignore this input
+            if(WakeDisplay())
+            {
+                return;
+            }
 
             switch (display_state)
             {
@@ -62,7 +68,11 @@ namespace esp_sio_dev
 
         void Callback_Confirm(void)
         {
-            last_input_timestamp = system::timer::timestamp;
+            // if display was off, return and ignore this input
+            if(WakeDisplay())
+            {
+                return;
+            }
 
             switch (display_state)
             {
@@ -95,7 +105,11 @@ namespace esp_sio_dev
 
         void Callback_Right(void)
         {
-            last_input_timestamp = system::timer::timestamp;
+            // if display was off, return and ignore this input
+            if(WakeDisplay())
+            {
+                return;
+            }
 
             switch (display_state)
             {
@@ -131,6 +145,23 @@ namespace esp_sio_dev
         {
             char text_buffer[256];
             int32_t msg_y_offset = 1;
+
+            // Dim display after 20 seconds of inactivity
+            if (
+                (system::timer::timestamp - last_gui_update_timestamp) >= (20 * 1000) && display_on && display_dimmed == false)
+            {
+                oled::SetContrast(0);
+                display_dimmed = true;
+            }
+
+            // Turn display off after 30 seconds of inactivity
+            if (
+                (system::timer::timestamp - last_gui_update_timestamp) >= (30 * 1000) && display_on)
+            {
+                oled::DisplayOff();
+                display_on = false;
+                return;
+            }
 
             switch (display_state)
             {
@@ -246,17 +277,37 @@ namespace esp_sio_dev
 
                 DoDisplay();
 
-                oled::DrawBuffer();
-
-                render_end_time = system::timer::timestamp;
-                time_to_delay = delay_per_frame - (render_end_time - render_start_time);
-                if (time_to_delay > 0)
+                if (display_on)
                 {
-                    vTaskDelay(time_to_delay / portTICK_PERIOD_MS);
+                    oled::DrawBuffer();
+
+                    render_end_time = system::timer::timestamp;
+                    time_to_delay = delay_per_frame - (render_end_time - render_start_time);
+                    if (time_to_delay > 0)
+                    {
+                        vTaskDelay(time_to_delay / portTICK_PERIOD_MS);
+                    }
+                }
+                else
+                {
+                    // if display off delay 1 second between update checks
+                    vTaskDelay(1000 / portTICK_PERIOD_MS);
                 }
             }
 
             vTaskDelete(NULL);
         }
+
+        bool WakeDisplay()
+        {
+            bool was_awake = !display_on;
+            last_gui_update_timestamp = system::timer::timestamp;
+            oled::DisplayOn();
+            oled::SetContrast(storage::config::settings.contrast);
+            display_dimmed = false;
+            display_on = true;
+
+            return was_awake;
+        }
     } // gui
-} // esp_sio_dev
+} // openmc
