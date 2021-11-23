@@ -1,6 +1,22 @@
-#ifndef _SETTINGS_H
-#define _SETTINGS_H
+#include "system/settings.h"
 
+#include <string.h>
 
+namespace openmc
+{
+    namespace system
+    {
+        struct Settings settings;
 
-#endif // _SETTINGS_H
+        void LoadDefaultSettings()
+        {
+            static const uint8_t default_ssid[] = "openmc";
+            static const uint8_t default_password[] = "ps1devrulezdude!";
+
+            settings.wifi_mode = wifi::Mode::kAcessPoint;
+            memcpy(settings.ssid, default_ssid, sizeof(default_ssid));
+            memcpy(settings.password, default_password, sizeof(default_password));
+            settings.contrast = 0xFF;
+        }
+    } // namespace system
+} // namespace openmc

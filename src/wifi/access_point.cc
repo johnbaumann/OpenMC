@@ -1,7 +1,7 @@
 #include "wifi/access_point.h"
 #include "wifi/wifi.h"
 
-#include "storage/config.h"
+#include "system/settings.h"
 #include "web/file_server.h"
 #include "logging.h"
 
@@ -82,11 +82,11 @@ namespace openmc
 
                 wifi_config_t wifi_config;
 
-                memcpy(wifi_config.ap.ssid, storage::config::settings.ssid, sizeof(storage::config::settings.ssid));
-                memcpy(wifi_config.ap.password, storage::config::settings.password, sizeof(storage::config::settings.password));
+                memcpy(wifi_config.ap.ssid, system::settings.ssid, sizeof(system::settings.ssid));
+                memcpy(wifi_config.ap.password, system::settings.password, sizeof(system::settings.password));
 
                 wifi_config.ap.channel = AP_WIFI_CHANNEL;
-                if (storage::config::settings.password[0] == '\0')
+                if (system::settings.password[0] == '\0')
                 {
                     wifi_config.ap.authmode = WIFI_AUTH_OPEN;
                 }
@@ -101,7 +101,7 @@ namespace openmc
                 ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
                 ESP_ERROR_CHECK(esp_wifi_start());
 
-                ESP_LOGI(kLogPrefix, "Init finished. SSID:%s password:%s channel:%d", storage::config::settings.ssid, storage::config::settings.password, AP_WIFI_CHANNEL);
+                ESP_LOGI(kLogPrefix, "Init finished. SSID:%s password:%s channel:%d", system::settings.ssid, system::settings.password, AP_WIFI_CHANNEL);
 
                 wifi::ready = true;
             }

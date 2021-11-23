@@ -2,7 +2,7 @@
 #include "wifi/wifi.h"
 
 #include "logging.h"
-#include "storage/config.h"
+#include "system/settings.h"
 
 #include <string.h>
 #include <freertos/FreeRTOS.h>
@@ -103,8 +103,8 @@ namespace openmc
 
                 wifi_config_t wifi_config;
 
-                memcpy(wifi_config.sta.ssid, storage::config::settings.ssid, sizeof(storage::config::settings.ssid));
-                memcpy(wifi_config.sta.password, storage::config::settings.password, sizeof(storage::config::settings.password));
+                memcpy(wifi_config.sta.ssid, system::settings.ssid, sizeof(system::settings.ssid));
+                memcpy(wifi_config.sta.password, system::settings.password, sizeof(system::settings.password));
                 wifi_config.sta.scan_method = WIFI_FAST_SCAN;
                 wifi_config.sta.bssid_set = 0;
                 wifi_config.sta.channel = 0;

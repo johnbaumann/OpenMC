@@ -7,6 +7,7 @@
 #include "playstation/spi.h"
 #include "storage/config.h"
 #include "storage/storage.h"
+#include "system/settings.h"
 #include "system/timer.h"
 #include "touch_input/touch.h"
 #include "web/file_server.h"
@@ -103,18 +104,18 @@ namespace openmc
         start_app_cpu();
 
         // Load defaults so system is in a known state
-        storage::config::LoadDefaultSettings();
+        system::LoadDefaultSettings();
 
         // Try loading config from /sdcard/config.txt, else defaults set above remain in place
         storage::config::LoadConfig();
 
         gui::display_state = gui::DisplayState::kMainStatus;
 
-        if (storage::config::settings.wifi_mode == wifi::Mode::kClient)
+        if (system::settings.wifi_mode == wifi::Mode::kClient)
         {
             wifi::client::Init();
         }
-        else if (storage::config::settings.wifi_mode == wifi::Mode::kAcessPoint)
+        else if (system::settings.wifi_mode == wifi::Mode::kAcessPoint)
         {
             wifi::access_point::Init();
         }
@@ -132,7 +133,7 @@ namespace openmc
             printf("card not present\n");
         */
 
-        if (storage::config::settings.wifi_mode == wifi::Mode::kClient || storage::config::settings.wifi_mode == wifi::Mode::kAcessPoint)
+        if (system::settings.wifi_mode == wifi::Mode::kClient || system::settings.wifi_mode == wifi::Mode::kAcessPoint)
         {
             while (wifi::ready == false || storage::ready == false)
             {

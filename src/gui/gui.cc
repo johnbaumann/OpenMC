@@ -1,8 +1,8 @@
 #include "gui/gui.h"
 
 #include "oled/ssd1306.h"
-#include "storage/config.h"
 #include "storage/storage.h"
+#include "system/settings.h"
 #include "system/timer.h"
 #include "wifi/wifi.h"
 
@@ -174,11 +174,11 @@ namespace openmc
 
             case DisplayState::kMainStatus:
 
-                if (storage::config::settings.wifi_mode == wifi::Mode::kClient)
+                if (system::settings.wifi_mode == wifi::Mode::kClient)
                 {
                     sprintf(text_buffer, "Wifi-Client");
                 }
-                else if (storage::config::settings.wifi_mode == wifi::Mode::kAcessPoint)
+                else if (system::settings.wifi_mode == wifi::Mode::kAcessPoint)
                 {
                     sprintf(text_buffer, "Wifi-AP");
                 }
@@ -189,7 +189,7 @@ namespace openmc
                 oled::DrawMessage(text_buffer, 0, msg_y_offset, false, true, true);
                 msg_y_offset += 7;
 
-                if (storage::config::settings.wifi_mode != wifi::Mode::kNone)
+                if (system::settings.wifi_mode != wifi::Mode::kNone)
                 {
                     if (wifi::ready)
                     {
@@ -303,7 +303,7 @@ namespace openmc
             bool was_awake = !display_on;
             last_gui_update_timestamp = system::timer::timestamp;
             oled::DisplayOn();
-            oled::SetContrast(storage::config::settings.contrast);
+            oled::SetContrast(system::settings.contrast);
             display_dimmed = false;
             display_on = true;
 

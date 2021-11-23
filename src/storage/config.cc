@@ -1,5 +1,6 @@
 #include "config.h"
 
+#include "system/settings.h"
 #include "wifi/wifi.h"
 
 #include <stdbool.h>
@@ -18,8 +19,6 @@ namespace openmc
     {
         namespace config
         {
-            struct Settings settings;
-            // config setting defaults
             bool LoadConfig()
             {
                 char file_path[] = "/sdcard/config.txt";
@@ -29,7 +28,7 @@ namespace openmc
                 char current_setting_name[MAX_LINE_LENGTH];
                 char current_setting_value[MAX_LINE_LENGTH];
 
-                Settings temp_settings;
+                system::Settings temp_settings;
 
                 char *delimiter_location;
                 char *line_ending_location;
@@ -123,25 +122,14 @@ namespace openmc
                 if ((found_wifi_mode && found_ssid && found_password) || (found_wifi_mode && temp_settings.wifi_mode == wifi::Mode::kNone))
                 {
                     // Valid configuration file, copy settings
-                    settings = temp_settings;
-                    settings.contrast = 0xFF; // Contrast not implemented to config yet
+                    system::settings = temp_settings;
+                    system::settings.contrast = 0xFF; // Contrast not implemented to config yet
                     return true;
                 }
                 else
                 {
                     return false;
                 }
-            }
-
-            void LoadDefaultSettings()
-            {
-                static const uint8_t default_ssid[] = "openmc";
-                static const uint8_t default_password[] = "ps1devrulezdude!";
-
-                settings.wifi_mode = wifi::Mode::kAcessPoint;
-                memcpy(settings.ssid, default_ssid, sizeof(default_ssid));
-                memcpy(settings.password, default_password, sizeof(default_password));
-                settings.contrast = 0xFF;
             }
         }
     }
