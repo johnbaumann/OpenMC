@@ -1,6 +1,5 @@
 #include "sio_memory_card.h"
 
-#include "storage/storage.h"
 #include "logging.h"
 #include "playstation/sio.h"
 #include "playstation/spi.h"
@@ -22,7 +21,8 @@ namespace openmc
 #ifdef MC_DEBUG
       static char debug_string[] = "MC event %2X\n";
 #endif
-      uint8_t DRAM_ATTR memory_card_ram[131072] = {};
+      //uint8_t DRAM_ATTR memory_card_ram[131072] = {};
+      extern uint8_t DRAM_ATTR memory_card_ram[131072];
 
       uint8_t DRAM_ATTR flag = Flags::kDirectoryUnread;
 
